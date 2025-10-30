@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.1",
+  "summary": "课堂中学生多以低头专注状态为主，部分存在手机使用行为，整体互动水平中等。",
+  "observations": [
+    "近三分之一学生低头（bow_head:9），集中于座位前开展学习活动。",
+    "约10%学生使用手机（using_phone:3），分布在教室中后区域。",
+    "少数学生抬头或转头（raise_head:2、turn_head:1），呈现短暂分心状态。",
+    "超四成学生坐姿端正（upright:12），课堂纪律性良好。"
+  ],
+  "metrics": {
+    "head_down_rate": 31,
+    "phone_usage_rate": 10,
+    "reading_rate": 7,
+    "hand_raise_rate": 0,
+    "looking_around_rate": 10,
+    "writing_rate": null,
+    "sleeping_rate": 0,
+    "distracted_rate": 21,
+    "interaction_level": "medium",
+    "focus_score": 70,
+    "activity_score": 60
+  },
+  "per_class": {
+    "upright": 12,
+    "turn_head": 1,
+    "bow_head": 9,
+    "reading": 2,
+    "raise_head": 2,
+    "using_phone": 3
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        18,
+        12,
+        22
+      ],
+      [
+        2,
+        4,
+        2
+      ]
+    ],
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "risks": [
+    "部分学生使用手机可能影响学习效率"
+  ],
+  "suggestions": [
+    "提醒学生减少手机使用，保持专注"
+  ],
+  "limitations": [],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "provenance": {
+    "generated_by": "ai",
+    "model": "glm-4.5v",
+    "timestamp": "2025-10-14 21:14:05"
+  }
+}

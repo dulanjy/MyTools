@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.1",
+  "summary": "教室内学生数量较少且分布分散，多数人保持坐姿端正或进行阅读，少量人员存在使用手机或低头行为。",
+  "observations": [],
+  "metrics": {
+    "head_down_rate": 9,
+    "phone_usage_rate": 9,
+    "reading_rate": 45,
+    "hand_raise_rate": 0,
+    "looking_around_rate": 0,
+    "writing_rate": 0,
+    "sleeping_rate": 0,
+    "distracted_rate": 18,
+    "interaction_level": "low",
+    "focus_score": 82,
+    "activity_score": 70
+  },
+  "per_class": {
+    "upright": 4,
+    "bow_head": 1,
+    "reading": 5,
+    "using_phone": 1
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        4,
+        18,
+        8
+      ],
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "risks": [
+    "部分学生使用手机可能分散注意力"
+  ],
+  "suggestions": [
+    "提醒学生专注学习，减少手机使用"
+  ],
+  "limitations": [
+    "图像视角为俯视，部分学生行为细节难以完全识别，如阅读时的具体状态"
+  ],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  }
+}

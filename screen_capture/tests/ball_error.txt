@@ -1,0 +1,263 @@
+要让悬浮球更加美观，可以从以下几个方面进行优化：
+
+## 1. 改进悬浮球外观设计
+
+```python
+def _ensure_float_button(self):
+    if getattr(self, '_float_btn_win', None) and self._float_btn_win.winfo_exists():
+        return
+    
+    fb = tk.Toplevel()
+    fb.overrideredirect(True)
+    fb.attributes('-topmost', True)
+    fb.attributes('-alpha', 0.9)  # 添加透明度
+    fb.geometry('64x64+40+80')
+    
+    # 移除窗口背景，实现真正圆形
+    fb.attributes('-transparentcolor', 'black')
+    fb.config(bg='black')
+    
+    frm = ttk.Frame(fb)
+    frm.pack(fill=tk.BOTH, expand=True)
+    
+    # 使用 Canvas 创建更美观的悬浮球
+    btn = tk.Canvas(frm, width=64, height=64, highlightthickness=0, bg='black', bd=0)
+    btn.pack(fill=tk.BOTH, expand=True)
+    
+    # 创建渐变圆形按钮
+    try:
+        # 外圈光晕效果
+        btn.create_oval(2, 2, 62, 62, fill='#4a7aff', outline='#2b6cb0', width=2)
+        # 主圆形
+        btn.create_oval(4, 4, 60, 60, fill='#2b6cb0', outline='#1e4e8c', width=1)
+        # 内圈高光
+        btn.create_oval(8, 8, 30, 30, fill='#63b3ed', outline='')
+        # 图标
+        btn.create_text(32, 32, text='⚲', fill='white', font=('Segoe UI Symbol', 16, 'bold'))
+        
+        # 添加悬浮效果的文字提示
+        btn.create_text(32, 50, text='工具箱', fill='white', font=('Microsoft YaHei', 8))
+        
+    except Exception:
+        # 备用简单样式
+        btn.create_oval(4, 4, 60, 60, fill='#2b6cb0', outline='white')
+        btn.create_text(32, 32, text='◎', fill='white', font=('Arial', 14, 'bold'))
+    
+    # 初始化拖拽状态
+    self._float_drag = None
+    self._float_press_pos = None
+    self._float_moved = False
+    
+    # 事件绑定
+    btn.bind('<Button-1>', self._on_float_press)
+    btn.bind('<B1-Motion>', self._on_float_drag)
+    btn.bind('<ButtonRelease-1>', self._on_float_release)
+    btn.bind('<ButtonRelease-1>', self._float_btn_release_click, add='+')
+    
+    # 添加鼠标悬停效果
+    def on_enter(e):
+        try:
+            fb.attributes('-alpha', 0.95)
+            # 可以在这里添加放大动画
+            fb.geometry('68x68+{}'.format(fb.winfo_x()-2))
+        except Exception:
+            pass
+            
+    def on_leave(e):
+        try:
+            fb.attributes('-alpha', 0.9)
+            fb.geometry('64x64+{}'.format(fb.winfo_x()+2))
+        except Exception:
+            pass
+    
+    btn.bind('<Enter>', on_enter)
+    btn.bind('<Leave>', on_leave)
+    
+    self._float_btn_win = fb
+```
+
+## 2. 添加动画效果
+
+```python
+def _animate_float_button(self, scale_factor=1.1):
+    """悬浮球点击动画"""
+    if not hasattr(self, '_float_btn_win') or not self._float_btn_win:
+        return
+        
+    try:
+        win = self._float_btn_win
+        original_size = (64, 64)
+        target_size = (int(64 * scale_factor), int(64 * scale_factor))
+        
+        # 简单缩放动画
+        for i in range(5):
+            size = (
+                original_size[0] + (target_size[0] - original_size[0]) * i / 5,
+                original_size[1] + (target_size[1] - original_size[1]) * i / 5
+            )
+            win.geometry(f"{int(size[0])}x{int(size[1])}")
+            win.update()
+            time.sleep(0.02)
+            
+        for i in range(5):
+            size = (
+                target_size[0] - (target_size[0] - original_size[0]) * i / 5,
+                target_size[1] - (target_size[1] - original_size[1]) * i / 5
+            )
+            win.geometry(f"{int(size[0])}x{int(size[1])}")
+            win.update()
+            time.sleep(0.02)
+            
+    except Exception:
+        pass
+```
+
+## 3. 改进悬浮球菜单（扩展功能）
+
+```python
+def _show_float_button_menu(self):
+    """显示悬浮球快捷菜单"""
+    if not hasattr(self, '_float_btn_win') or not self._float_btn_win:
+        return
+        
+    menu = tk.Menu(self._float_btn_win, tearoff=0, bg='#2d3748', fg='white', 
+                   activebackground='#4a5568', activeforeground='white',
+                   font=('Microsoft YaHei', 9))
+    
+    # 添加菜单项
+    menu.add_command(label="📷 截图", command=self.save_snapshot)
+    menu.add_command(label="🔍 OCR识别", command=self.perform_ocr)
+    menu.add_command(label="🤖 AI分析", command=self.analyze_current_frame)
+    menu.add_separator()
+    menu.add_command(label="⚙️ 设置", command=lambda: self._navigate('settings'))
+    menu.add_command(label="❌ 隐藏悬浮球", 
+                    command=lambda: self._toggle_float_button_visibility(False))
+    
+    # 在悬浮球位置显示菜单
+    try:
+        x = self._float_btn_win.winfo_rootx()
+        y = self._float_btn_win.winfo_rooty() + 64
+        menu.post(x, y)
+    except Exception:
+        pass
+```
+
+## 4. 更新点击事件处理
+
+```python
+def _float_btn_release_click(self, event=None):
+    """悬浮球点击事件处理"""
+    try:
+        if getattr(self, '_float_moved', False):
+            self._float_moved = False
+            return
+            
+        # 添加点击动画
+        self._animate_float_button()
+        
+        # 短按显示/隐藏主界面，长按或其他手势显示菜单
+        if event and event.time - getattr(self, '_float_press_time', 0) > 500:
+            # 长按显示菜单
+            self._show_float_button_menu()
+        else:
+            # 短按切换主界面
+            if not getattr(self, '_show_visible', True):
+                self._toggle_show_visibility()
+            else:
+                try:
+                    self.show.deiconify()
+                    self.show.lift()
+                    self.show.attributes('-topmost', True)
+                except Exception:
+                    pass
+                    
+    except Exception:
+        pass
+```
+
+## 5. 添加拖拽时的视觉反馈
+
+```python
+def _on_float_press(self, event):
+    try:
+        win = self._float_btn_win
+        if not win: return
+        self._float_drag = (event.x_root, event.y_root, win.winfo_x(), win.winfo_y())
+        self._float_press_pos = (event.x_root, event.y_root)
+        self._float_press_time = event.time  # 记录按下时间
+        self._float_moved = False
+        
+        # 拖拽开始时改变外观
+        try:
+            canvas = win.winfo_children()[0].winfo_children()[0]  # 获取canvas
+            canvas.delete('all')
+            # 拖拽状态样式
+            canvas.create_oval(2, 2, 62, 62, fill='#805ad5', outline='#6b46c1', width=2)
+            canvas.create_oval(4, 4, 60, 60, fill='#6b46c1', outline='#553c9a', width=1)
+            canvas.create_text(32, 32, text='⇲', fill='white', font=('Segoe UI Symbol', 14, 'bold'))
+        except Exception:
+            pass
+            
+    except Exception:
+        pass
+
+def _on_float_release(self, _event):
+    """拖拽释放时恢复原样式"""
+    self._float_drag = None
+    # 恢复原始样式
+    if hasattr(self, '_float_btn_win') and self._float_btn_win:
+        try:
+            self._ensure_float_button()  # 这会重新绘制样式
+        except Exception:
+            pass
+```
+
+## 6. 添加边缘吸附功能
+
+```python
+def _on_float_drag(self, event):
+    try:
+        if not hasattr(self, '_float_drag') or self._float_drag is None:
+            return
+            
+        x0, y0, wx, wy = self._float_drag
+        dx, dy = event.x_root - x0, event.y_root - y0
+        nx, ny = wx + dx, wy + dy
+        
+        # 边缘吸附逻辑
+        screen_width = self.show.winfo_screenwidth()
+        screen_height = self.show.winfo_screenheight()
+        
+        # 距离屏幕边缘20像素内自动吸附
+        SNAP_DISTANCE = 20
+        if nx < SNAP_DISTANCE:
+            nx = 0
+        elif nx > screen_width - 64 - SNAP_DISTANCE:
+            nx = screen_width - 64
+            
+        if ny < SNAP_DISTANCE:
+            ny = 0
+        elif ny > screen_height - 64 - SNAP_DISTANCE:
+            ny = screen_height - 64
+        
+        self._float_btn_win.geometry(f"64x64+{int(nx)}+{int(ny)}")
+        
+        # 拖拽检测
+        if not getattr(self, '_float_moved', False):
+            px, py = getattr(self, '_float_press_pos', (x0, y0))
+            move_distance = abs(event.x_root - px) + abs(event.y_root - py)
+            if move_distance > 3:
+                self._float_moved = True
+                
+    except Exception:
+        pass
+```
+
+## 主要美化改进总结：
+
+1. **视觉效果**：渐变色彩、阴影效果、精致图标
+2. **交互反馈**：悬停效果、点击动画、拖拽状态变化
+3. **功能扩展**：右键菜单、边缘吸附、长按功能
+4. **细节优化**：透明度、圆角、文字提示
+
+这些改进会让悬浮球看起来更现代化、更具交互性，提升用户体验。

@@ -1,0 +1,43 @@
+# 开发环境依赖（高版本 OpenCV，允许与 paddleocr 的版本上限警告共存）
+# 使用场景：本机调试 / 需要更高版本 OpenCV 修复 / 可能扩展更多图像算法
+
+# --- 核心运行 ---
+numpy==2.0.2
+pillow>=10,<12
+mss>=9
+PyAutoGUI>=0.9.54
+pyperclip>=1.8
+protobuf==3.20.2
+
+# --- OCR 后端（至少安装一个）---
+paddlepaddle==2.6.2
+paddleocr==2.7.0.3
+rapidocr-onnxruntime==1.4.4
+
+# 保留一个 OpenCV 发行版（开发：使用较新版本以获得修复）
+opencv-contrib-python==4.10.0.84
+
+# --- 图像 / 数据增强（可选） ---
+albumentations>=2.0.0
+imgaug==0.4.0
+scikit-image>=0.24.0
+scipy>=1.13.0
+
+# --- 文档 / 输出（可选） ---
+PyMuPDF>=1.20.0
+python-docx>=1.1.0
+pdf2docx>=0.5.8
+openpyxl>=3.1.0
+
+# --- 性能 / 便利工具（可选） ---
+RapidFuzz>=3.0.0
+ujson>=5.8.0
+
+# --- Web / 国际化（可选） ---
+Flask>=3.0.0
+flask-babel>=4.0.0
+
+# 说明：
+# 1. 如果你只想快速运行 OCR + 捕获，可删除所有 “可选” 段落。
+# 2. 若出现 paddleocr 对 OpenCV 的版本上限警告，可忽略（已验证工作）。
+# 3. 确保不要同时安装 opencv-python 与 opencv-contrib-python 两个包。

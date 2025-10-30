@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.1",
+  "summary": "课堂内共有8名学生，多数保持坐姿端正，部分存在低头、阅读或使用手机等行为。",
+  "observations": [
+    "全部8名学生均呈坐姿端正状态（upright=8）。",
+    "2名学生处于低头状态（bow_head=2），涉及阅读或设备操作可能性。",
+    "3名学生正在进行阅读（reading=3），体现一定学习投入。",
+    "6名学生抬头注视前方（raise_head=6），显示对课堂活动的关注。",
+    "存在1名睡眠学生（sleep=1）及1名使用手机学生（using_phone=1），个别注意力分散。",
+    "课桌上有4部手机（phone=4），提示潜在干扰因素。"
+  ],
+  "metrics": {
+    "head_down_rate": 25,
+    "phone_usage_rate": 13,
+    "reading_rate": 38,
+    "hand_raise_rate": 0,
+    "looking_around_rate": null,
+    "writing_rate": 0,
+    "sleeping_rate": 13,
+    "distracted_rate": 25,
+    "interaction_level": "medium",
+    "focus_score": 75,
+    "activity_score": 30
+  },
+  "per_class": {
+    "upright": 8,
+    "bow_head": 2,
+    "reading": 3,
+    "raise_head": 6,
+    "sleep": 1,
+    "using_phone": 1,
+    "phone": 4
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "image_size": {
+      "width": 0,
+      "height": 0
+    }
+  },
+  "risks": [
+    "手机数量较多（4部），可能影响部分学生注意力"
+  ],
+  "suggestions": [
+    "提醒学生规范手机使用，强化课堂专注度"
+  ],
+  "limitations": [
+    "空间分布的grid3x3原始数据（[[0,0,0],[6,12,2],[12,10,10]]）与总人数（8）矛盾，未采用该数据，以计数字段为准。",
+    "部分行为标签（如looking_around_rate）因缺乏对应数据无法计算，设为null。"
+  ],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 0,
+      "height": 0
+    }
+  },
+  "provenance": {
+    "generated_by": "ai",
+    "model": "glm-4.5v",
+    "timestamp": "2025-10-22 08:52:47"
+  }
+}

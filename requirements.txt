@@ -1,0 +1,12 @@
+# Core runtime dependencies
+pyautogui>=0.9.54
+mss>=9.0.1
+Pillow>=10.0.0
+pyperclip>=1.8.2
+
+# Optional OCR (uncomment to enable PaddleOCR based text recognition)
+# paddlepaddle==2.6.1          # CPU version (choose matching wheel for your platform)
+# paddleocr>=2.7.0             # Provides PaddleOCR engine
+
+# Optional: for better performance in some image operations
+# numpy>=1.26.0

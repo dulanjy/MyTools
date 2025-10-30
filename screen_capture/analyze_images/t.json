@@ -1,0 +1,73 @@
+{
+  "schema_version": "v1.1",
+  "summary": "课堂中学生以低头姿态为主，部分使用手机，整体专注度中等偏低，互动较少。",
+  "observations": [
+    "近三分之一学生呈低头状态（bow_head占比31%），显示对任务的持续关注。",
+    "少数学生使用手机（using_phone占10%），存在轻度分心现象。",
+    "阅读与抬头行为稀少（合计占比24%），课堂活跃度较低。",
+    "空间上中间区域学生密集（第二行占比约62%），前后排分布较稀疏。",
+    "转头行为偶发（仅1人），整体注意力分散程度有限。"
+  ],
+  "metrics": {
+    "head_down_rate": 31,
+    "phone_usage_rate": 10,
+    "reading_rate": 7,
+    "hand_raise_rate": 0,
+    "looking_around_rate": 3,
+    "writing_rate": null,
+    "sleeping_rate": null,
+    "distracted_rate": 14,
+    "interaction_level": "low",
+    "focus_score": 48,
+    "activity_score": 17
+  },
+  "per_class": {
+    "upright": 12,
+    "turn_head": 1,
+    "bow_head": 9,
+    "reading": 2,
+    "raise_head": 2,
+    "using_phone": 3
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        18,
+        12,
+        22
+      ],
+      [
+        2,
+        4,
+        2
+      ]
+    ],
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "risks": [],
+  "suggestions": [],
+  "limitations": [
+    "空间分布的grid3x3划分依赖图像尺寸假设，实际教室布局可能存在偏差，影响区域人数统计准确性。"
+  ],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 0,
+      "height": 0
+    }
+  },
+  "provenance": {
+    "generated_by": "ai",
+    "model": "glm-4.5v",
+    "timestamp": "2025-10-14 21:07:57"
+  }
+}

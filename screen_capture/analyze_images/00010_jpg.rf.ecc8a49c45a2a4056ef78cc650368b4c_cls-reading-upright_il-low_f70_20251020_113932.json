@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.1",
+  "summary": "教室内布置多排木质课桌椅，学生数量为3，分布于不同区域，行为涵盖阅读、书写等学习相关动作。",
+  "observations": [
+    "学生主要集中在教室后排及中间行，前排区域无学生分布。",
+    "多数学生呈现阅读或书写姿态，其中1人低头专注于桌面任务。",
+    "教室空间宽敞，课桌排列整齐，自然光线充足，环境适宜学习。",
+    "部分学生周边放置有个人物品，显示其持续学习的状态。",
+    "学生之间互动较少，多以独立完成学习任务为主。"
+  ],
+  "metrics": {
+    "head_down_rate": 33,
+    "phone_usage_rate": 33,
+    "reading_rate": null,
+    "hand_raise_rate": 0,
+    "looking_around_rate": 0,
+    "writing_rate": null,
+    "sleeping_rate": 0,
+    "distracted_rate": null,
+    "interaction_level": "low",
+    "focus_score": 70,
+    "activity_score": 60
+  },
+  "per_class": {
+    "reading": 7,
+    "upright": 3,
+    "bow_head": 1,
+    "using_phone": 1
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        8,
+        16,
+        10
+      ],
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "risks": [],
+  "suggestions": [],
+  "limitations": [
+    "计数字段中\"reading\"数量（7）与\"head\"数量（3）矛盾，head代表学生总数，阅读人数不应超过学生总数，可能数据录入错误。",
+    "空间分布的\"grid3x3\"数据总和（36）远大于学生总数（3），空间分布数据可能存在错误。"
+  ],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 0,
+      "height": 0
+    }
+  },
+  "provenance": {
+    "generated_by": "ai",
+    "model": "glm-4.5v",
+    "timestamp": "2025-10-20 11:39:39"
+  }
+}

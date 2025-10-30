@@ -1,0 +1,12 @@
+upright
+bend
+book
+raise_head
+turn_head
+bow_head
+reading
+Using_phone
+sleep
+phone
+hand-raising
+writing

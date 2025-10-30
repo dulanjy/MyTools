@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.1",
+  "summary": "教室内有3名学生，分布于不同区域，部分学生处于专注状态。",
+  "observations": [
+    "学生数量为3，分散于教室的前排、中间及后排区域",
+    "部分学生呈现低头姿态（如中间区域的两人）",
+    "可能有学生正在进行阅读活动",
+    "教室整体布局整齐，桌面物品较少"
+  ],
+  "metrics": {
+    "head_down_rate": 33,
+    "phone_usage_rate": 0,
+    "reading_rate": 33,
+    "hand_raise_rate": 0,
+    "looking_around_rate": null,
+    "writing_rate": null,
+    "sleeping_rate": 0,
+    "distracted_rate": null,
+    "interaction_level": "low",
+    "focus_score": 50,
+    "activity_score": 50
+  },
+  "per_class": {
+    "reading": 1,
+    "bow_head": 1,
+    "upright": 1
+  },
+  "spatial": {
+    "grid3x3": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "image_size": {
+      "width": 640,
+      "height": 640
+    }
+  },
+  "risks": [],
+  "suggestions": [],
+  "limitations": [
+    "计数字段中\"reading\"数值（7）与学生总数（3）矛盾，推测可能为输入错误，故未采纳该数值，以图片视觉观察结果为准"
+  ],
+  "confidence": "medium",
+  "source": {
+    "image_path": "",
+    "image_size": {
+      "width": 0,
+      "height": 0
+    }
+  },
+  "provenance": {
+    "generated_by": "ai",
+    "model": "glm-4.5v",
+    "timestamp": "2025-10-20 11:42:54"
+  }
+}
