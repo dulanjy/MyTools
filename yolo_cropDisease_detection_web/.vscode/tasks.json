@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/tasks.json",
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flask: Serve (5000)",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\hp1\\anaconda3\\Scripts\\activate && conda activate yolov8 && python main.py"
+      ],
+      "options": {
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Spring: Run (9999)",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        ".\\mvnw.cmd spring-boot:run -DskipTests"
+      ],
+      "options": {
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Vite: Dev (8888)",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "options": {
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "All: Dev (Flask+Spring+Vite)",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "echo starting dev services"
+      ],
+      "dependsOn": [
+        "Flask: Serve (5000)",
+        "Spring: Run (9999)",
+        "Vite: Dev (8888)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

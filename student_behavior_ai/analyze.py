@@ -10,37 +10,47 @@ try:
 except Exception:
     AIClient = None  # type: ignore
 
+# 可选一致性与富化处理：根据 per_class/head 生成 observations/risks/suggestions 等
+try:
+    from student_behavior_ai.postprocess import enrich_consistency  # type: ignore
+except Exception:
+    enrich_consistency = None  # type: ignore
+
 
 DEFAULT_PROMPT = (
-    "你是一名教学观察与课堂行为分析助手。若提供了结构化 JSON（检测/统计/已有分析），"
+    "你是一名教学观察与课堂行为分析助手。使用简体中文回答。若提供了结构化 JSON（检测/统计/已有分析），"
     "必须以 JSON 为主、图片为辅进行判断；冲突时优先保留 JSON 结论，并在 limitations 说明依据。"
-    "请客观评估本次课堂的学生专注度与行为特征，按以下结构输出：\n"
-    "1) 关键观察要点（建议 3~6 条，短句；可结合计数与3×3空间分布）\n"
-    "2) 指标评估（低头率、看手机、阅读/举手/环顾/书写/打瞌睡等，以0~100估算并简述依据）\n"
-    "3) 风险与建议，风险点（2~4 条），改进建议（从教学节奏/互动设计/座位与视线管理/课堂规范等维度给出 3~6 条）\n"
-    "可以适当结合json中的数据进行风险与建议，不一定要局限在图片内容\n"
-    "注意：不要臆测不可见细节；图片仅作为辅证核对，不应覆盖 JSON 主体信息。"
+    "请按如下结构输出一份简明的 Markdown 报告（面向老师阅读；前端仅重点展示‘关键观察要点’与‘局限性’）：\n\n"
+    "1) 关键观察要点\n"
+    "   - 用项目符号列出 4~8 条；每条尽量 ≤30 字，结合计数或 3×3 空间分布（前/中/后、左/中/右），"
+    "并包含‘位置/行为/比例’等中的至少两项信息（如：中排右侧低头 3/6 ≈50%）。\n"
+    "2) 指标评估（给出 0~100 的整数及一句话依据）\n"
+    "   - 低头率/看手机/阅读/书写/举手/环顾/打瞌睡/分心；互动密度（low/medium/high）；专注度与活跃度评分。\n"
+    "3) 风险与建议（可简要）\n"
+    "   - 风险点 2~4 条；建议 3~6 条，围绕节奏/互动/座位/规范等。避免空泛与与场景无关的内容。\n"
+    "4) 局限性与说明\n"
+    "   - 明确遮挡/分辨率/单帧等局限；如与 JSON 冲突，优先 JSON 并说明原因；避免臆测与百科式表述。"
 )
 
 def build_json_only_prompt(base_prompt: Optional[str]) -> str:
-    """构造严格 JSON 输出的系统提示。
+    """构造更严格的 JSON 输出系统提示（加码版）。
 
-    设计要点（JSON-first）：
-    - 若存在结构化 JSON（检测/统计/已有分析），以 JSON 为主、图片为辅；
-    - 冲突时优先保留 JSON 结论，并在 limitations 解释；
-    - 引导模型输出 3~6 条 observations，并约束 schema v1.1 字段与取值范围。
+    目标：当提供 counts/spatial 等结构化数据时，输出更“实”和“具体”的 schema v1.1 JSON，
+    并对数量、取值范围、一致性做出明确约束；若无法满足，必须在 limitations 解释原因。
     """
     head = (base_prompt.strip() + "\n\n") if base_prompt else ''
     schema = (
-        '请严格仅输出一个 JSON 对象（UTF-8，无注释、无多余文本）。\n'
+        '只输出一个 JSON 对象（UTF-8，合法 JSON，无注释、无多余文本、无 Markdown）。\n'
         'JSON 优先规则：\n'
         '- 若提供了结构化 JSON（检测/统计/已有分析），以 JSON 为主、图片为辅；不可见证据不臆测；\n'
-        '- 如与图片或直觉冲突，优先保留 JSON 结论，并在 limitations 说明冲突以提供参考；\n'
-        '- observations 建议 3~6 条、短句，结合计数与 3×3 空间分布归纳显著现象。\n\n'
+        '- 如与图片或直觉冲突，优先保留 JSON 结论，并在 limitations 说明冲突与依据；\n'
+        '- 对 counts 中的常见同义请按以下归一：using_phone/use_phone→using_phone；phone/cellphone/mobile_phone→phone；\n'
+        '  hand_raising/raise_hand/hands_up→hand_raise；head_down/looking_down/bend→bow_head；note_taking/notetaking→writing；sleep/doze→sleeping。\n\n'
+        '前端仅展示 observations 与 limitations 两个板块，请务必完整、具体且客观地填充它们。\n\n'
         '输出字段（schema v1.1）：\n'
         '{\n'
         '  "schema_version": "1.1",\n'
-        '  "summary": "一句话概括",\n'
+        '  "summary": "一句话概括（≤30字，避免空泛）",\n'
         '  "observations": ["要点1", "要点2", "要点3"],\n'
         '  "metrics": {\n'
         '    "head_down_rate": null,\n'
@@ -55,18 +65,32 @@ def build_json_only_prompt(base_prompt: Optional[str]) -> str:
         '    "focus_score": 0,\n'
         '    "activity_score": 0\n'
         '  },\n'
-        '  "per_class": {},\n'
-        '  "spatial": {"grid3x3": [[0,0,0],[0,0,0],[0,0,0]]},\n'
+        '  "per_class": {},  \n'
+        '  "spatial": {"grid3x3": [[0,0,0],[0,0,0],[0,0,0]], "image_size": {"width": 0, "height": 0}},\n'
         '  "risks": ["风险1", "风险2"],\n'
         '  "suggestions": ["建议1", "建议2", "建议3"],\n'
         '  "limitations": ["局限1", "局限2"],\n'
         '  "confidence": "low|medium|high",\n'
         '  "source": {"image_path": "", "image_size": {"width": 0, "height": 0}}\n'
         '}\n\n'
-        '规则补充：\n'
-        '- 所有百分比/评分统一为 0~100 的整数；无法判断用 null，并在 limitations 说明原因；\n'
-        '- interaction_level 取值仅限 "low"/"medium"/"high"；\n'
-        '- 不要逐条罗列检测框，聚焦总体归类与显著现象。'
+        '数量与取值硬性约束：\n'
+        '- 使用简体中文；observations 至少 4 条、至多 8 条；每条为短句（≤30字），结合计数与 3×3 网格突出显著现象，尽量包含“位置/行为/比例”；\n'
+        '- risks 至少 2 条、至多 5 条；suggestions 至少 3 条、至多 8 条；\n'
+        '- limitations 至少 2 条、至多 8 条；明确数据不确定性、遮挡/分辨率限制、与 grid 或 head 不一致之处及处理口径；避免泛化与百科式描述；\n'
+        '- metrics 中除无法判断项外，一律为 0~100 的整数（四舍五入）；interaction_level ∈ {low, medium, high}；\n'
+        '- 若已提供 counts/head，则必须据此给出可计算的指标，不得随意置 null；确实无法推断时置 null 并在 limitations 解释原因。\n\n'
+        '一致性与派生规则：\n'
+        '- 若 counts 提供了行为计数，估算 head（学生总数）：优先 counts.head，否则取主要行为之和；\n'
+        '- rate 计算：rate = round( count / max(1, head) × 100 )（整数%）；\n'
+        '- distracted_rate 建议与 {head_down_rate, phone_usage_rate, looking_around_rate} 的最大值保持一致或略高，并说明依据；\n'
+        '- per_class 可为 {label:int}（计数），或 {label:{"count":int,"rate":int}}（推荐，若 head 已估算）。\n'
+        '- 如可确定，请补充 "head": int 与 "人数": int 字段（同值）。\n\n'
+        '空间分布约束：\n'
+        '- 若提供了 spatial.grid3x3，请据其归纳“前/中/后、左/中/右”的显著聚集/稀疏现象；\n'
+        '- 若 grid3x3 与 head/计数明显不一致，请在 limitations 明确指出矛盾与处理口径（参考示例）。\n\n'
+        '写作规范：\n'
+        '- 仅输出合法 JSON；不要输出 Markdown、解释性文字或额外包裹；\n'
+        '- 不要逐条罗列检测框；避免臆测不可见细节；避免涉及可识别个人隐私的描述；不要包含模型/提示词/系统信息；不要自称AI.'
     )
     return head + schema
 
@@ -91,6 +115,74 @@ def _norm_label(label: str) -> str:
         'writing': 'writing',
     }
     return alias.get(s, s)
+
+
+def normalize_counts(raw: Dict[str, Any] | None) -> Dict[str, int]:
+    """归一化计数键名（去空格/大小写/同义词），合并到标准标签。"""
+    out: Dict[str, int] = {}
+    if not raw:
+        return out
+    for k, v in raw.items():
+        try:
+            n = int(v)
+        except Exception:
+            continue
+        key = _norm_label(str(k))
+        out[key] = out.get(key, 0) + n
+    return out
+
+
+def _ratio(n: int, d: int) -> int:
+    if d <= 0:
+        return 0
+    x = int(round((n / d) * 100))
+    return max(0, min(100, x))
+
+
+def derive_metrics(counts: Dict[str, int], head_count: Optional[int]) -> Dict[str, Any]:
+    """基于归一化 counts 与 head 估算各类比率与评分。返回 metrics 字典。"""
+    c = normalize_counts(counts)
+    # 估算总人数：优先 head，否则用主要行为之和
+    denom = head_count if isinstance(head_count, int) and head_count > 0 else 0
+    if denom <= 0:
+        for k in ('upright', 'bow_head', 'reading', 'writing', 'using_phone', 'phone'):
+            denom += c.get(k, 0)
+    denom = max(denom, 1)
+
+    head_down = c.get('bow_head', 0)
+    phone_any = c.get('using_phone', 0) + c.get('phone', 0)
+    reading = c.get('reading', 0)
+    writing = c.get('writing', 0)
+    hand = c.get('hand_raise', 0)
+    looking = c.get('turn_head', 0)  # 近似“环顾”
+    sleeping = c.get('sleeping', 0)
+
+    head_down_rate = _ratio(head_down, denom)
+    phone_rate = _ratio(phone_any, denom)
+    reading_rate = _ratio(reading, denom)
+    writing_rate = _ratio(writing, denom)
+    hand_raise_rate = _ratio(hand, denom)
+    looking_rate = _ratio(looking, denom)
+    sleeping_rate = _ratio(sleeping, denom)
+
+    # 简单评分：低头/手机越低越好，举手/阅读/书写越高越好
+    focus_score = max(0, 100 - int(0.6 * head_down_rate + 0.8 * phone_rate))
+    activity_score = min(100, int(0.6 * hand_raise_rate + 0.5 * reading_rate + 0.5 * writing_rate + 0.3 * looking_rate))
+    interaction_level = 'high' if hand_raise_rate >= 20 else ('medium' if hand_raise_rate >= 5 else 'low')
+
+    return {
+        'head_down_rate': head_down_rate,
+        'phone_usage_rate': phone_rate,
+        'reading_rate': reading_rate,
+        'hand_raise_rate': hand_raise_rate,
+        'looking_around_rate': looking_rate,
+        'writing_rate': writing_rate,
+        'sleeping_rate': sleeping_rate,
+        'distracted_rate': max(head_down_rate, phone_rate, looking_rate),
+        'interaction_level': interaction_level,
+        'focus_score': focus_score,
+        'activity_score': activity_score,
+    }
 
 
 def parse_detection_json(path: str) -> Tuple[Dict[str, int], List[Dict[str, Any]], Tuple[int, int] | None]:
@@ -296,37 +388,74 @@ def infer_counts_path(image_path: str) -> Optional[str]:
     return cand if os.path.exists(cand) else None
 
 
-def rule_based_summary(counts: Dict[str, Any]) -> str:
-    # 一个非常简单的规则引擎示例，可按需强化
-    upright = int(counts.get(' upright ', 0) or counts.get('upright', 0))
-    bow = int(counts.get(' bow_head ', 0) or counts.get('bow_head', 0))
-    phone = int(counts.get(' Using_phone ', 0) or counts.get('using_phone', 0))
-    reading = int(counts.get(' reading ', 0) or counts.get('reading', 0))
-    total = max(1, upright + bow + phone + reading)
-    bow_rate = bow / total * 100
-    phone_rate = phone / total * 100
-    lines = []
+def rule_based_summary(counts: Dict[str, Any], head_count: Optional[int] = None) -> str:
+    """更稳健的规则引擎摘要：归一化计数、给出关键比率与建议。"""
+    c = normalize_counts(counts)
+    denom = head_count if isinstance(head_count, int) and head_count > 0 else 0
+    if denom <= 0:
+        denom = sum(c.get(k, 0) for k in ('upright', 'bow_head', 'reading', 'writing', 'using_phone', 'phone'))
+    denom = max(denom, 1)
+
+    metrics = derive_metrics(c, denom)
+
+    upright = c.get('upright', 0)
+    bow = c.get('bow_head', 0)
+    phone_any = c.get('using_phone', 0) + c.get('phone', 0)
+    reading = c.get('reading', 0)
+    writing = c.get('writing', 0)
+
+    lines: List[str] = []
     lines.append("[规则引擎初步评估]")
-    lines.append(f"总样本：{total}，低头率约 {bow_rate:.1f}% ，看手机约 {phone_rate:.1f}%")
-    if phone_rate >= 10:
-        lines.append("发现较多使用手机行为，建议提醒注意课堂纪律与任务聚焦。")
-    if bow_rate >= 30:
-        lines.append("低头比例偏高，可能在记笔记/走神或设备操作，建议加快节奏或引入互动。")
-    if reading > 0:
-        lines.append("存在阅读行为，可能为跟随课堂材料，建议观察是否与教学任务一致。")
-    if upright / total >= 0.6:
-        lines.append("多数同学处于端正状态，整体专注度尚可。")
+    lines.append(
+        f"样本估计：{denom} 人；低头 {bow}、看手机 {phone_any}、阅读 {reading}、书写 {writing}、端正 {upright}。")
+    lines.append(
+        "指标估算：" +
+        f"低头率 {metrics['head_down_rate']}% ｜ 手机 {metrics['phone_usage_rate']}% ｜ 阅读 {metrics['reading_rate']}% ｜ "
+        f"书写 {metrics['writing_rate']}% ｜ 举手 {metrics['hand_raise_rate']}% ｜ 环顾 {metrics['looking_around_rate']}%")
+
+    if metrics['phone_usage_rate'] >= 15:
+        lines.append("手机使用偏多，建议明确课堂任务与设备使用规范，并设置阶段性检查点。")
+    if metrics['head_down_rate'] >= 30:
+        lines.append("低头比例偏高，可能在记笔记/走神或设备操作，可尝试加快节奏或引入讨论/点名。")
+    if metrics['hand_raise_rate'] <= 3 and metrics['focus_score'] < 70:
+        lines.append("互动略低且专注度一般，可安排冷启动提问或小组汇报以提升参与度。")
+    if metrics['reading_rate'] >= 20 and writing == 0:
+        lines.append("阅读较多但书写较少，建议要求关键点勾画/随堂笔记以巩固。")
+
     return "\n".join(lines)
 
 
-def build_prompt(counts: Dict[str, Any], custom_prompt: Optional[str]) -> str:
+def build_prompt(counts: Dict[str, Any], custom_prompt: Optional[str], head_count: Optional[int] = None, spatial: Optional[Dict[str, Any]] = None) -> str:
+    """构造面向 Markdown 报告的提示词，并注入关键指标与 JSON 优先规则。"""
     head = custom_prompt.strip() if custom_prompt else DEFAULT_PROMPT
-    if counts:
+
+    c_norm = normalize_counts(counts)
+    if c_norm:
         try:
-            counts_str = json.dumps(counts, ensure_ascii=False)
+            counts_str = json.dumps(c_norm, ensure_ascii=False)
         except Exception:
-            counts_str = str(counts)
-        head += "\n\n以下是针对该画面的计数字段(JSON)：\n" + counts_str + "\n"
+            counts_str = str(c_norm)
+        head += "\n\n以下为检测/统计 JSON（已归一化）：\n" + counts_str + "\n"
+
+    # 注入推算指标，帮助模型对齐量化口径
+    m = derive_metrics(c_norm, head_count)
+    try:
+        metrics_str = json.dumps(m, ensure_ascii=False)
+    except Exception:
+        metrics_str = str(m)
+    head += "\n以下为基于 JSON 的指标估算（0~100，供参考）：\n" + metrics_str + "\n"
+
+    # 注入学生总数与空间分布
+    if isinstance(head_count, int) and head_count > 0:
+        head += f"\n学生总数（head）估计：{head_count}\n"
+    if spatial:
+        try:
+            sp_str = json.dumps(spatial, ensure_ascii=False)
+        except Exception:
+            sp_str = str(spatial)
+        head += "\n以下为 3×3 空间分布计数（JSON）：\n" + sp_str + "\n"
+
+    head += "\n请以 JSON 为主、图片为辅进行判断；当图片与 JSON 冲突时，优先保留 JSON 结论并在 limitations 说明。"
     return head
 
 
@@ -368,6 +497,7 @@ def main():
             counts[k] = counts.get(k, 0) + int(v)
 
     # 规则引擎输出（始终可用）
+    # 在得出 head_count 之前，先用计数粗估；稍后会再次用于 Markdown 汇总
     rb = rule_based_summary(counts)
 
     # 若禁用 AI，则直接输出规则引擎结果
@@ -418,17 +548,17 @@ def main():
     # 构建 prompt：可选择严格 JSON 模式
     if args.json_only:
         head = build_json_only_prompt(args.prompt)
+        # 在严格 JSON 模式下，仍然注入 head 与空间分布作为参考
+        if head_count is not None:
+            head += f"\n\n学生总数 (head): {head_count}\n"
+        if sp:
+            try:
+                sp_str = json.dumps(sp, ensure_ascii=False)
+            except Exception:
+                sp_str = str(sp)
+            head += "\n以下为检测框的空间分布（3x3 区域计数）JSON：\n" + sp_str + "\n"
     else:
-        head = build_prompt(counts, args.prompt)
-    # 将学生总数注入 Prompt（便于模型参考），以 'head' 字段标识
-    if head_count is not None:
-        head += f"\n\n学生总数 (head): {head_count}\n"
-    if sp:
-        try:
-            sp_str = json.dumps(sp, ensure_ascii=False)
-        except Exception:
-            sp_str = str(sp)
-        head += "\n\n以下为检测框的空间分布（3x3 区域计数）JSON：\n" + sp_str + "\n"
+        head = build_prompt(counts, args.prompt, head_count=head_count, spatial=sp)
 
     if img is not None:
         res = client.analyze_image(img, head)
@@ -439,11 +569,10 @@ def main():
         res = client.chat(messages)
     if 'content' in res:
         meta = res.get('meta') or {}
+        # 使用最新 head_count 重新生成规则摘要（确保与上文口径一致）
+        rb_now = rule_based_summary(counts, head_count=head_count)
         head_out = [
             "# 课堂行为分析（AI）",
-            "",
-            "## 规则引擎初步",
-            rb,
             "",
             "## AI 详细分析",
             res['content'],
@@ -557,6 +686,21 @@ def main():
             iw, ih = img.size if img is not None else (0, 0)
         except Exception:
             iw, ih = (0, 0)
+        # 估算 head
+        c_norm_fallback = normalize_counts(counts) if normalize_counts else (counts or {})
+        head_est_fb = None
+        try:
+            if isinstance(c_norm_fallback, dict):
+                if 'head' in c_norm_fallback and isinstance(c_norm_fallback.get('head'), int):
+                    head_est_fb = int(c_norm_fallback['head'])
+                else:
+                    sfb = 0
+                    for v in c_norm_fallback.values():
+                        if isinstance(v, int):
+                            sfb += int(v)
+                    head_est_fb = sfb if sfb > 0 else None
+        except Exception:
+            head_est_fb = None
         fallback = {
             'schema_version': '1.1',
             'summary': '（规则）基于检测计数与空间分布的初步整理',
@@ -590,6 +734,19 @@ def main():
                 'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
             }
         }
+        # 注入 head/人数，便于富化
+        try:
+            if head_est_fb is not None:
+                fallback['head'] = int(head_est_fb)
+                fallback['人数'] = int(head_est_fb)
+        except Exception:
+            pass
+        # 富化：自动生成 observations 等（若可用）
+        try:
+            if enrich_consistency and isinstance(fallback, dict):
+                fallback = enrich_consistency(fallback)
+        except Exception:
+            pass
         # 写 JSON（如指定）
         if args.json_out:
             try:

@@ -56,7 +56,7 @@ class AIClient:
     def ready(self) -> bool:
         return self._client is not None
 
-    def chat(self, messages: List[Dict], *, timeout: Optional[float] = 30.0) -> Dict:
+    def chat(self, messages: List[Dict], *, timeout: Optional[float] = 30.0, response_format: Optional[Dict] = None) -> Dict:
         if not self.ready:
             try:
                 logger.warning("AI client not ready (missing key or sdk).")
@@ -64,19 +64,46 @@ class AIClient:
                 pass
             return {"error": "AI client not ready (missing key or sdk)."}
         try:
-            try:
-                resp = self._client.chat.completions.create(
-                    model=self.model_text,
-                    messages=messages,
-                    stream=False,
-                    request_timeout=timeout
-                )
-            except TypeError:
-                resp = self._client.chat.completions.create(
-                    model=self.model_text,
-                    messages=messages,
-                    stream=False
-                )
+            # Prefer JSON mode when requested (if SDK supports response_format)
+            if response_format is not None:
+                try:
+                    resp = self._client.chat.completions.create(
+                        model=self.model_text,
+                        messages=messages,
+                        stream=False,
+                        request_timeout=timeout,
+                        response_format=response_format,
+                    )
+                except TypeError:
+                    # Older SDKs may not support request_timeout or response_format together
+                    try:
+                        resp = self._client.chat.completions.create(
+                            model=self.model_text,
+                            messages=messages,
+                            stream=False,
+                            response_format=response_format,
+                        )
+                    except TypeError:
+                        # Fall back to basic create without response_format
+                        resp = self._client.chat.completions.create(
+                            model=self.model_text,
+                            messages=messages,
+                            stream=False,
+                        )
+            else:
+                try:
+                    resp = self._client.chat.completions.create(
+                        model=self.model_text,
+                        messages=messages,
+                        stream=False,
+                        request_timeout=timeout
+                    )
+                except TypeError:
+                    resp = self._client.chat.completions.create(
+                        model=self.model_text,
+                        messages=messages,
+                        stream=False
+                    )
             return {"content": resp.choices[0].message.content}
         except Exception as e:
             return {"error": str(e)}

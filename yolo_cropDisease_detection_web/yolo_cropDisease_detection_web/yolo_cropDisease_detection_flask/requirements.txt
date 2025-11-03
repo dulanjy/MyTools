@@ -1,0 +1,11 @@
+flask
+flask-cors
+flask-socketio
+ultralytics
+opencv-python
+numpy
+Pillow
+requests
+onnxruntime
+zai
+keyring
