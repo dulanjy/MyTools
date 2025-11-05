@@ -275,6 +275,64 @@ class VideoProcessingApp:
             'model': res.model_name,
             'image_size': list(res.image_size),
         }
+    # 异步/同步保存识别记录到 Spring（便于前端历史查看）
+        try:
+            try:
+                labels = [str(o.get('label') or '') for o in out.get('objects', [])]
+                confidences = [o.get('confidence') for o in out.get('objects', [])]
+            except Exception:
+                labels = []
+                confidences = []
+            # fallback: 若没有 objects，则用 counts 的键作为 labels
+            if not labels and isinstance(out.get('counts'), dict):
+                try:
+                    labels = list(out.get('counts').keys())
+                    confidences = [int(v) for v in out.get('counts').values()]
+                except Exception:
+                    labels = []
+                    confidences = []
+
+            record = {
+                'username': self.data.get('username'),
+                'inputImg': self.data.get('inputImg'),
+                'outImg': out.get('outImg'),
+                'weight': self.data.get('weight'),
+                'allTime': out.get('allTime'),
+                'conf': self.data.get('conf'),
+                'startTime': self.data.get('startTime'),
+                # 后端期望 label/confidence 为 JSON 字符串
+                'label': json.dumps(labels, ensure_ascii=False),
+                'confidence': json.dumps(confidences, ensure_ascii=False),
+            }
+            # 发送到 Spring 的 imgRecords 接口：优先尝试环境配置的路径（默认 /imgRecords），失败再试备选路径
+            base_url = os.environ.get('SPRING_BASE_URL', f'http://localhost:{self.port + 4999}').rstrip('/') if False else os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
+            primary_path = os.environ.get('SPRING_IMGRECORDS_PATH', '/imgRecords')
+            alt_path = '/api/imgRecords' if primary_path != '/api/imgRecords' else '/imgRecords'
+            candidates = [f"{base_url}{primary_path}", f"{base_url}{alt_path}"]
+
+            attempted = []
+            last_status = None
+            for url in candidates:
+                attempted.append(url)
+                try:
+                    last_status = self.save_data(json.dumps(record, ensure_ascii=False), url)
+                except Exception:
+                    last_status = None
+                # 成功即停止重试
+                if last_status == 200:
+                    break
+            # 在返回体中附加一次简短的上传结果，便于前端/调用方调试
+            try:
+                out['record_upload'] = {
+                    'attempted_urls': attempted,
+                    'last_status_code': last_status,
+                    'debug_dir': './runs/debug_img_records' if (last_status is None or last_status != 200) else None
+                }
+            except Exception:
+                pass
+        except Exception:
+            pass
+
         return jsonify(out)
 
     def analyze(self):
@@ -1369,7 +1427,23 @@ class VideoProcessingApp:
                     self.socketio.emit('progress', {'data': progress})
                 uploadedUrl = self.upload(self.paths['output'])
                 self.data['outVideo'] = uploadedUrl
-                self.save_data(json.dumps(self.data), 'http://localhost:9999/videoRecords')
+                # 记录上报到 Spring：支持环境变量配置与 /api 回退
+                try:
+                    base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
+                    primary_path = os.environ.get('SPRING_VIDEORECORDS_PATH', '/videoRecords')
+                    alt_path = '/api/videoRecords' if primary_path != '/api/videoRecords' else '/videoRecords'
+                    candidates = [f"{base_url}{primary_path}", f"{base_url}{alt_path}"]
+                    payload = json.dumps(self.data, ensure_ascii=False)
+                    last_status = None
+                    for url in candidates:
+                        try:
+                            last_status = self.save_data(payload, url)
+                        except Exception:
+                            last_status = None
+                        if last_status == 200:
+                            break
+                except Exception as _e:
+                    print(f"上报 videoRecords 时发生错误: {_e}")
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['video_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1413,7 +1487,23 @@ class VideoProcessingApp:
                 uploadedUrl = self.upload(self.paths['output'])
                 self.data["outVideo"] = uploadedUrl
                 print(self.data)
-                self.save_data(json.dumps(self.data), 'http://localhost:9999/cameraRecords')
+                # 记录上报到 Spring：支持环境变量配置与 /api 回退
+                try:
+                    base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
+                    primary_path = os.environ.get('SPRING_CAMERARECORDS_PATH', '/cameraRecords')
+                    alt_path = '/api/cameraRecords' if primary_path != '/api/cameraRecords' else '/cameraRecords'
+                    candidates = [f"{base_url}{primary_path}", f"{base_url}{alt_path}"]
+                    payload = json.dumps(self.data, ensure_ascii=False)
+                    last_status = None
+                    for url in candidates:
+                        try:
+                            last_status = self.save_data(payload, url)
+                        except Exception:
+                            last_status = None
+                        if last_status == 200:
+                            break
+                except Exception as _e:
+                    print(f"上报 cameraRecords 时发生错误: {_e}")
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['camera_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1427,10 +1517,67 @@ class VideoProcessingApp:
         """将结果数据上传到服务器"""
         headers = {'Content-Type': 'application/json'}
         try:
+            print(f"Attempting to POST img record to: {path}")
+            # 打印 payload 大致信息（避免打印过大）
+            try:
+                _preview = data if isinstance(data, str) and len(data) < 1000 else (data[:1000] + '...') if isinstance(data, str) else str(data)
+                print(f"Payload preview: {_preview}")
+            except Exception:
+                pass
             response = requests.post(path, data=data, headers=headers)
-            print("记录上传成功！" if response.status_code == 200 else f"记录上传失败，状态码: {response.status_code}")
+            if response.status_code == 200:
+                print("记录上传成功！")
+            else:
+                # 打印并保存响应 body 以便排查 404/401 等错误原因
+                resp_text = ''
+                try:
+                    resp_text = response.text
+                except Exception:
+                    resp_text = '<无法读取 response.text>'
+                print(f"记录上传失败，状态码: {response.status_code}, body: {resp_text}")
+                # 保存调试信息到本地，方便离线排查/重试
+                try:
+                    os.makedirs('./runs/debug_img_records', exist_ok=True)
+                    import time as _time
+                    fname = f"./runs/debug_img_records/{int(_time.time())}_{uuid.uuid4().hex}.json"
+                    try:
+                        parsed_payload = json.loads(data) if isinstance(data, str) else data
+                    except Exception:
+                        parsed_payload = data
+                    dbg = {
+                        'url': path,
+                        'status_code': response.status_code,
+                        'response_text': resp_text,
+                        'payload': parsed_payload,
+                    }
+                    with open(fname, 'w', encoding='utf-8') as _f:
+                        _f.write(json.dumps(dbg, ensure_ascii=False, indent=2))
+                    print(f"失败记录已保存到: {fname}")
+                except Exception as _e:
+                    print(f"保存失败记录时出错: {_e}")
+            # 返回状态码给调用方判断是否需要重试
+            try:
+                return response.status_code
+            except Exception:
+                return None
         except requests.RequestException as e:
             print(f"上传记录时发生错误: {str(e)}")
+            # 保存 payload 以便后续重试
+            try:
+                os.makedirs('./runs/debug_img_records', exist_ok=True)
+                import time as _time
+                fname = f"./runs/debug_img_records/{int(_time.time())}_{uuid.uuid4().hex}_error.json"
+                try:
+                    parsed_payload = json.loads(data) if isinstance(data, str) else data
+                except Exception:
+                    parsed_payload = data
+                dbg = {'url': path, 'error': str(e), 'payload': parsed_payload}
+                with open(fname, 'w', encoding='utf-8') as _f:
+                    _f.write(json.dumps(dbg, ensure_ascii=False, indent=2))
+                print(f"错误记录已保存到: {fname}")
+            except Exception as _e:
+                print(f"保存错误记录时出错: {_e}")
+            return None
 
     def convert_avi_to_mp4(self, temp_output):
         """使用 FFmpeg 将 AVI 格式转换为 MP4 格式，并显示转换进度。"""
