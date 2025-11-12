@@ -33,11 +33,11 @@ def markdown_from_ai_json(data: Dict[str, Any], title: str = "课堂行为分析
         limitations = []
 
     parts: List[str] = []
-    parts.append(f"# {title}")
+    parts.append(f"{title}")
     parts.append("")
 
     # 关键观察要点（仅渲染）
-    parts.append("## 关键观察要点")
+    parts.append("关键观察要点")
     if observations:
         for it in observations[:8]:
             parts.append(f"- {str(it)}")
@@ -46,7 +46,7 @@ def markdown_from_ai_json(data: Dict[str, Any], title: str = "课堂行为分析
     parts.append("")
 
     # 局限性（仅渲染）
-    parts.append("## 局限性")
+    parts.append("局限性")
     if limitations:
         for it in limitations[:8]:
             parts.append(f"- {str(it)}")

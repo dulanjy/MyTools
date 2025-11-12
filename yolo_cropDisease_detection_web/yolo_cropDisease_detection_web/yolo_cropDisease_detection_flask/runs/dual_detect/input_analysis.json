@@ -1,68 +1,72 @@
 {
   "schema_version": "1.1",
-  "summary": "课堂内共有192名学生，，部分存在低头、阅读、使用手机等行为。",
+  "summary": "课堂内共有25名学生，，部分存在低头、阅读、使用手机等行为。",
   "observations": [
-    "65名学生坐姿端正（upright=65）。",
-    "88名学生处于低头状态（bow_head=88），可能与阅读或设备操作相关。",
-    "27名学生正在阅读（reading=27）。",
-    "7名学生抬头注视前方（raise_head=7），关注课堂。",
-    "课桌/使用中的手机合计5（using_phone=4, phone=1）。"
+    "8名学生坐姿端正（upright=8）。",
+    "3名学生处于低头状态（bow_head=3），可能与阅读或设备操作相关。",
+    "2名学生正在阅读（reading=2）。",
+    "6名学生抬头注视前方（raise_head=6），关注课堂。",
+    "课桌/使用中的手机合计5（using_phone=1, phone=4）。"
   ],
   "metrics": {
-    "head_down_rate": 46,
-    "phone_usage_rate": 3,
-    "reading_rate": 14,
+    "head_down_rate": 12,
+    "phone_usage_rate": 20,
+    "reading_rate": 8,
     "hand_raise_rate": 0,
     "looking_around_rate": 0,
     "writing_rate": 0,
     "sleeping_rate": 0,
-    "distracted_rate": 46,
+    "distracted_rate": 20,
     "interaction_level": "low",
-    "focus_score": 70,
-    "activity_score": 7
+    "focus_score": 77,
+    "activity_score": 4
   },
   "per_class": {
     "upright": {
-      "count": 65,
-      "rate": 34
+      "count": 8,
+      "rate": 32
     },
     "bow_head": {
-      "count": 88,
-      "rate": 46
+      "count": 3,
+      "rate": 12
     },
     "reading": {
-      "count": 27,
-      "rate": 14
+      "count": 2,
+      "rate": 8
     },
     "raise_head": {
-      "count": 7,
+      "count": 6,
+      "rate": 24
+    },
+    "sleep": {
+      "count": 1,
+      "rate": 4
+    },
+    "using_phone": {
+      "count": 1,
       "rate": 4
     },
     "phone": {
-      "count": 1,
-      "rate": 1
-    },
-    "using_phone": {
       "count": 4,
-      "rate": 2
+      "rate": 16
     }
   },
   "spatial": {
     "grid3x3": [
       [
-        46,
-        176,
-        50
+        0,
+        0,
+        0
       ],
       [
-        20,
-        38,
-        36
+        6,
+        12,
+        2
       ],
       [
-        2,
-        10,
-        6
+        12,
+        8,
+        10
       ]
     ],
     "image_size": {
@@ -84,11 +88,10 @@
   "provenance": {
     "generated_by": "local_postprocess"
   },
-  "head": 192,
-  "人数": 192,
+  "head": 25,
+  "人数": 25,
   "risks": [
-    "手机数量较多（5），可能影响部分学生注意力。",
-    "低头/阅读行为较集中，可能削弱与教师的互动与反馈。"
+    "手机数量较多（5），可能影响部分学生注意力。"
   ],
   "suggestions": [
     "提醒规范手机使用，必要时设置收纳或定时检查，强化课堂专注度。",

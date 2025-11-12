@@ -1,4 +1,5 @@
-@import 'mixins/index.scss';
+// 命名空间收敛：改为显式别名 mix，避免全局污染。
+@use 'mixins/index' as mix;
 
 /* Button 按钮
 ------------------------------- */
@@ -100,7 +101,7 @@
 .el-sub-menu .iconfont,
 .el-menu-item .fa,
 .el-sub-menu .fa {
-	@include generalIcon;
+	@include mix.generalIcon;
 }
 // 水平菜单、横向菜单高亮 背景色，鼠标 hover 时，有子级菜单的背景色
 .el-menu-item.is-active,

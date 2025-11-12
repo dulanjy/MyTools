@@ -1,7 +1,3 @@
-@import './app.scss';
-@import 'common/transition.scss';
-@import './other.scss';
-@import './element.scss';
-@import './media/media.scss';
-@import './waves.scss';
-@import './dark.scss';
+// 入口样式：使用 @use 引入聚合模块，替代旧的多段 @import
+// 后续可逐步将其它文件内部的 @import 迁移为 @use/@forward。
+@use './all';

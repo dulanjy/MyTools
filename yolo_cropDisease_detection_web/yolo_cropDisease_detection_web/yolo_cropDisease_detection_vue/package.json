@@ -5,8 +5,10 @@
 	"author": "lyt_20201208",
 	"license": "MIT",
 	"scripts": {
-		"dev": "vite --force",
-		"build": "vite build",
+		"dev": "set SASS_SILENCE_DEPRECATIONS=legacy-js-api&& vite --force",
+		"build": "set SASS_SILENCE_DEPRECATIONS=legacy-js-api&& vite build",
+		"dev:raw": "vite --force",
+		"build:raw": "vite build",
 		"lint-fix": "eslint --fix --ext .js --ext .jsx --ext .vue src/"
 	},
 	"dependencies": {
