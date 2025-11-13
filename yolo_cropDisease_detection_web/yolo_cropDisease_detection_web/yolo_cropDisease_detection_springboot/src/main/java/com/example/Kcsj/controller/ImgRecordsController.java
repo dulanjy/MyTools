@@ -45,7 +45,7 @@ public class ImgRecordsController {
             wrapper.like(ImgRecords::getKind, search1);
         }
         if (StrUtil.isNotBlank(search2)) {
-            wrapper.like(ImgRecords::getLable, search2);
+            wrapper.like(ImgRecords::getLabel, search2);
         }
         if (StrUtil.isNotBlank(search3)) {
             wrapper.like(ImgRecords::getConf, search3);

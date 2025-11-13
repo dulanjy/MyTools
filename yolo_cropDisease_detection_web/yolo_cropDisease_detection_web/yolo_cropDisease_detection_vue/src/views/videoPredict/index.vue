@@ -9,7 +9,7 @@
 					</el-select>
 				</div>
 				<div class="weight">
-					<el-select v-model="weight" placeholder="请选择模型" size="large" style="margin-left: 20px;width: 180px">
+					<el-select v-model="weight" placeholder="请选择模型" size="large" style="margin-left: 20px;width: 180px" @change="onWeightChange">
 						<el-option v-for="item in state.weight_items" :key="item.value" :label="item.label"
 							:value="item.value" />
 					</el-select>
@@ -84,6 +84,10 @@ const state = reactive({
 			value: 'tomato',
 			label: '西红柿',
 		},
+		{
+			value: 'head',
+			label: '人数',
+		},
 	],
 	data: {} as any,
 	video_path: '',
@@ -130,11 +134,45 @@ const getData = () => {
 	request.get('/api/flask/file_names').then((res) => {
 		if (res.code == 0) {
 			res.data = JSON.parse(res.data);
-			state.weight_items = res.data.weight_items.filter(item => item.value.includes(kind.value));
+			const name = String(kind.value || '').toLowerCase();
+			const keywordsByKind: Record<string, string[]> = {
+				corn: ['corn', 'maize'],
+				rice: ['rice', 'paddy'],
+				strawberry: ['strawberry'],
+				tomato: ['tomato'],
+				head: ['head', 'count', 'counts'],
+			};
+			if (!name) {
+				state.weight_items = res.data.weight_items;
+			} else {
+				const kws = keywordsByKind[name] || [name];
+				state.weight_items = res.data.weight_items.filter((item: any) => {
+					const v = String(item.value || '').toLowerCase();
+					return kws.some(kw => v.includes(kw));
+				});
+			}
 		} else {
 			ElMessage.error(res.msg);
 		}
 	});
+};
+
+const inferKindFromWeight = (w: string) => {
+	if (!w) return '';
+	const s = w.toLowerCase();
+	if (s.includes('tomato')) return 'tomato';
+	if (s.includes('strawberry')) return 'strawberry';
+	if (s.includes('corn') || s.includes('maize')) return 'corn';
+	if (s.includes('rice') || s.includes('paddy')) return 'rice';
+	if (s.includes('head') || s.includes('count')) return 'head';
+	return '';
+}
+
+const onWeightChange = () => {
+	const inferred = inferKindFromWeight(String(weight.value || ''));
+	if (inferred) {
+		kind.value = inferred;
+	}
 };
 
 

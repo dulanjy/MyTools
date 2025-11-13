@@ -14,7 +14,7 @@
 					查询
 				</el-button>
 			</div>
-			<el-table :data="state.tableData.data" style="width: 100%">
+			<el-table :data="state.tableData.data" style="width: 100%" row-key="id">
 				<el-table-column type="expand">
 					<template #default="props">
 						<div m="4">
@@ -100,42 +100,40 @@ const getTableData = () => {
 					state.tableData.loading = false;
 				}, 500);
 				for (let i = 0; i < res.data.records.length; i++) {
-					const confidences = JSON.parse(res.data.records[i].confidence);
-					const labels = JSON.parse(res.data.records[i].label);
-					const transformedData = transformData(res.data.records[i], confidences, labels);
+					const rec = res.data.records[i] || {};
+					let confidences: any[] = [];
+					let labels: any[] = [];
+					try { if (rec.confidence != null) confidences = JSON.parse(rec.confidence); } catch(e) { confidences = []; }
+					try { if (rec.label != null) labels = JSON.parse(rec.label); } catch(e) { labels = []; }
+					const transformedData = transformData(rec, confidences, labels);
 					transformedData["num"] = i + 1;
-					state.tableData.data[i] = transformedData
+					state.tableData.data[i] = transformedData;
 				}
 				state.tableData.total = res.data.total;
 			} else {
-				ElMessage({
-					type: 'error',
-					message: res.msg,
-				});
+				ElMessage({ type: 'error', message: res.msg });
 			}
 		});
 };
 
-const transformData = (originalData, confidences, labels) => {
-    const family = labels.map((label, index) => ({
-        label: label,
-        confidence: confidences[index],
-        startTime: originalData.startTime
-    }));
+const transformData = (originalData: any, confidences: any[], labels: any[]) => {
+	const family = (Array.isArray(labels) ? labels : []).map((label: any, index: number) => ({
+		label: label,
+		confidence: Array.isArray(confidences) ? confidences[index] : undefined,
+		startTime: originalData.startTime || originalData.start_time,
+	}));
 
-    const result = {
+	return {
 		id: originalData.id,
-        inputImg: originalData.inputImg,
-        outImg: originalData.outImg,
-        weight: originalData.weight,
-        allTime: originalData.allTime,
-        conf: originalData.conf,
-        startTime: originalData.startTime,
-        username: originalData.username,
-        family: family
-    };
-
-    return result;
+		inputImg: originalData.inputImg || originalData.input_img,
+		outImg: originalData.outImg || originalData.out_img,
+		weight: originalData.weight,
+		allTime: originalData.allTime || originalData.all_time,
+		conf: originalData.conf,
+		startTime: originalData.startTime || originalData.start_time,
+		username: originalData.username,
+		family,
+	};
 }
 
 

@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import shutil
 
 import cv2
@@ -113,8 +113,12 @@ class VideoProcessingApp:
         # Alias for when accessing Flask directly with a '/flask' prefix by mistake
         self.app.add_url_rule('/flask/ai/status', 'ai_status_alias', self.ai_status, methods=['GET'])
         # Common aliases so cURL can call /flask/* directly without frontend proxy
-        self.app.add_url_rule('/flask/file_names', 'file_names_alias', self.file_names, methods=['GET'])
+        # Wrapped variants to match older frontend expecting { code, data }
+        self.app.add_url_rule('/flask/file_names', 'file_names_wrapped', self.file_names_wrapped, methods=['GET'])
         self.app.add_url_rule('/flask/predictImg', 'predictImg_alias', self.predictImg, methods=['POST'])
+        # Legacy endpoints compatible with old UI
+        self.app.add_url_rule('/predict', 'predict_legacy', self.predict_legacy, methods=['POST'])
+        self.app.add_url_rule('/flask/predict', 'predict_legacy_alias', self.predict_legacy, methods=['POST'])
         self.app.add_url_rule('/flask/analyze', 'analyze_alias', self.analyze, methods=['POST'])
         self.app.add_url_rule('/flask/dualDetect', 'dualDetect_alias', self.dualDetect, methods=['POST'])
         self.app.add_url_rule('/flask/files/upload', 'files_upload_alias', self.files_upload, methods=['POST'])
@@ -214,6 +218,38 @@ class VideoProcessingApp:
         weight_items = [{'value': name, 'label': name} for name in self.get_file_names('./weights')]
         return json.dumps({'weight_items': weight_items}, ensure_ascii=False)
 
+    def file_names_wrapped(self):
+        """Return { code, data } to be compatible with older frontend expectations."""
+        try:
+            raw = self.file_names()  # JSON string
+            return jsonify({'code': 0, 'data': raw})
+        except Exception as e:
+            return jsonify({'code': 500, 'msg': str(e)})
+
+    def _infer_kind(self, weight: Optional[str]) -> Optional[str]:
+        try:
+            if not weight:
+                return None
+            name = str(Path(weight).name).lower()
+            # 优先取下划线/连字符/点之前的前缀
+            for sep in ['_', '-', '.']:
+                if sep in name:
+                    name = name.split(sep)[0]
+                    break
+            # 常见别名归一
+            aliases = {
+                'maize': 'corn',
+                'paddy': 'rice',
+            }
+            base = aliases.get(name, name)
+            # 针对计数/头部检测模型的推断
+            full = str(Path(weight).name).lower()
+            if any(tok in full for tok in ['head', 'count', 'counts']):
+                return 'head'
+            return base
+        except Exception:
+            return None
+
     def predictImg(self):
         data = request.get_json(force=True, silent=True) or {}
         self.data.clear()
@@ -223,11 +259,12 @@ class VideoProcessingApp:
             'conf': data.get('conf', 0.5),
             'startTime': data.get('startTime', ''),
             'inputImg': data.get('inputImg', ''),
-            'kind': data.get('kind', 'student'),
+            'kind': data.get('kind', ''),
         })
         img_path = self._localize_image_path(self.data['inputImg'])
         weight = self.data['weight']
-        kind = self.data['kind']
+        kind = self.data['kind'] or self._infer_kind(weight) or 'student'
+        self.data['kind'] = kind
         conf = float(self.data['conf'] or 0.5)
         backend = (data.get('backend') or '').lower().strip() if isinstance(data, dict) else ''
         if not backend:
@@ -297,6 +334,7 @@ class VideoProcessingApp:
                 'inputImg': self.data.get('inputImg'),
                 'outImg': out.get('outImg'),
                 'weight': self.data.get('weight'),
+                'kind': self.data.get('kind'),
                 'allTime': out.get('allTime'),
                 'conf': self.data.get('conf'),
                 'startTime': self.data.get('startTime'),
@@ -334,6 +372,25 @@ class VideoProcessingApp:
             pass
 
         return jsonify(out)
+
+    def predict_legacy(self):
+        """Wrap predictImg output into { code, data } for legacy UI."""
+        try:
+            resp = self.predictImg()
+            body = None
+            try:
+                body = resp.get_json()  # type: ignore[attr-defined]
+            except Exception:
+                try:
+                    body = json.loads(getattr(resp, 'data', b'').decode('utf-8'))
+                except Exception:
+                    body = None
+            if body is None:
+                return jsonify({'code': 500, 'msg': '空响应'})
+            code = 0 if int(body.get('status', 200)) == 200 else 500
+            return jsonify({'code': code, 'data': json.dumps(body, ensure_ascii=False)})
+        except Exception as e:
+            return jsonify({'code': 500, 'msg': str(e)})
 
     def analyze(self):
         """一体化：检测 + AI 分析。
@@ -1389,6 +1446,9 @@ class VideoProcessingApp:
             "inputVideo": request.args.get('inputVideo'),
             "kind": request.args.get('kind')
         })
+        # 若未显式传 kind，则根据权重名推断
+        if not self.data.get('kind'):
+            self.data['kind'] = self._infer_kind(self.data.get('weight')) or 'student'
         self.download(self.data["inputVideo"], self.paths['download'])
         cap = cv2.VideoCapture(self.paths['download'])
         if not cap.isOpened():
@@ -1456,6 +1516,8 @@ class VideoProcessingApp:
             "kind": request.args.get('kind'),
             "conf": request.args.get('conf'), "startTime": request.args.get('startTime')
         })
+        if not self.data.get('kind'):
+            self.data['kind'] = self._infer_kind(self.data.get('weight')) or 'student'
         self.socketio.emit('message', {'data': '正在加载，请稍等！'})
         model = YOLO(f'./weights/{self.data["weight"]}') if YOLO is not None else None
         cap = cv2.VideoCapture(0)

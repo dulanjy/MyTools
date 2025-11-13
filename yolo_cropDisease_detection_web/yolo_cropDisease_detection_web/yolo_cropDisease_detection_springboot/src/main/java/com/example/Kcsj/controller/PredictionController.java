@@ -2,7 +2,6 @@ package com.example.Kcsj.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.Kcsj.common.Result;
-import com.example.Kcsj.entity.ImgRecords;
 import com.example.Kcsj.mapper.ImgRecordsMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.util.Date;
 
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
@@ -102,18 +100,8 @@ public class PredictionController {
             if(responses.get("status").equals(400)){
                 return Result.error("-1", "Error: " + responses.get("message"));
             }else {
-                ImgRecords imgRecords = new ImgRecords();
-                imgRecords.setWeight(request.getWeight());
-                imgRecords.setConf(request.getConf());
-                imgRecords.setKind(request.getKind());
-                imgRecords.setInputImg(request.getInputImg());
-                imgRecords.setUsername(request.getUsername());
-                imgRecords.setStartTime(request.getStartTime());
-                imgRecords.setLable(String.valueOf(responses.get("label")));
-                imgRecords.setConfidence(String.valueOf(responses.get("confidence")));
-                imgRecords.setAllTime(String.valueOf(responses.get("allTime")));
-                imgRecords.setOutImg(String.valueOf(responses.get("outImg")));
-                imgRecordsMapper.insert(imgRecords); // 插入到数据库
+                // Flask 已在其内部将识别记录上报到 Spring 的 imgRecords，避免重复插入。
+                // 这里仅返回 Flask 的响应给前端。
                 return Result.success(response);
             }
         } catch (Exception e) {
