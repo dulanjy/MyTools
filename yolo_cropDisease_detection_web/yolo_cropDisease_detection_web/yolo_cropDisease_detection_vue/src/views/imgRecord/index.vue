@@ -2,7 +2,7 @@
 	<div class="system-role-container layout-padding">
 		<div class="system-role-padding layout-padding-auto layout-padding-view">
 			<div class="system-user-search mb15">
-				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入农作物类型"
+				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入测试类型"
 					style="max-width: 180px"> </el-input>
 				<el-input v-model="state.tableData.param.search2" size="default" placeholder="请输入识别结果"
 					style="max-width: 180px; margin-left: 15px">

@@ -2,7 +2,7 @@
 	<div class="system-role-container layout-padding">
 		<div class="system-role-padding layout-padding-auto layout-padding-view">
 			<div class="system-user-search mb15">
-				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入农作物类型" style="max-width: 180px"> </el-input>
+				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入检测类型" style="max-width: 180px"> </el-input>
 				<el-input v-model="state.tableData.param.search3" size="default" placeholder="请输入最低阈值" style="max-width: 180px; margin-left: 15px"></el-input>
 				<el-button size="default" type="primary" class="ml10" @click="getTableData()">
 					<el-icon>
@@ -20,7 +20,7 @@
 						</video>
 					</template>
 				</el-table-column>
-				<el-table-column prop="kind" label="农作物种类" align="center" />
+				<el-table-column prop="kind" label="测试类型" align="center" />
 				<el-table-column prop="weight" label="识别权重" align="center" />
 				<el-table-column prop="conf" label="最小阈值" show-overflow-tooltip width="100" align="center"></el-table-column>
 				<el-table-column prop="username" label="识别用户" show-overflow-tooltip align="center"></el-table-column>

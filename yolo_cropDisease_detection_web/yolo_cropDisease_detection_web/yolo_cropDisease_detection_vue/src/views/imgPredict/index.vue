@@ -3,7 +3,7 @@
 		<div class="system-predict-padding layout-padding-auto layout-padding-view">
 			<div class="header">
 				<div class="weight">
-					<el-select v-model="kind" placeholder="请选择作物种类" size="large" style="width: 200px" @change="getData">
+					<el-select v-model="kind" placeholder="请选择检测类型" size="large" style="width: 200px" @change="getData">
 						<el-option v-for="item in state.kind_items" :key="item.value" :label="item.label"
 							:value="item.value" />
 					</el-select>
