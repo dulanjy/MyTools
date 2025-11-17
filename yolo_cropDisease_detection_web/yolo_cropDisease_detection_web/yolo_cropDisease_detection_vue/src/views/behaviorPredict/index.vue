@@ -24,7 +24,7 @@
         </div>
         <div style="margin-left: 16px; display: flex; align-items: center; gap: 8px; min-width: 420px;">
           <el-checkbox v-model="preferManualAnalysis" label="使用指定AI化JSON" />
-          <el-input v-model="manualAnalysisJsonPath" placeholder="本机JSON路径，例如：g:\\MyCode\\MyTools\\screen_capture\\analyze_images\\*.json" size="large" clearable style="width: 520px;" />
+          <el-input v-model="manualAnalysisJsonPath" placeholder="导入指定JSON文件" size="large" clearable style="width: 520px;" />
         </div>
         <div style="margin-left: 8px">
           <el-button :disabled="!analysisMarkdown" @click="copyReport">复制报告</el-button>
@@ -36,8 +36,8 @@
 
       <el-card shadow="hover" class="card">
   <el-upload v-model="state.img" ref="uploadFile" class="avatar-uploader"
-       action="/flask/files/upload" :show-file-list="false"
-                   :on-success="handleUploadSuccess">
+      action="/flask/files/upload" :show-file-list="false"
+                  :on-success="handleUploadSuccess">
           <img v-if="imageUrl" :src="imageUrl" class="avatar" />
           <el-icon v-else class="avatar-uploader-icon">
             <Plus />

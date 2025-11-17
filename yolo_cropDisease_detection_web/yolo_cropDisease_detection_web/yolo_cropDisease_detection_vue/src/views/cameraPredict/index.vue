@@ -133,14 +133,31 @@ const getData = () => {
 				tomato: ['tomato'],
 				head: ['head', 'count', 'counts'],
 			};
+			let filtered: any[];
 			if (!name) {
-				state.weight_items = res.data.weight_items;
+				filtered = res.data.weight_items;
 			} else {
 				const kws = keywordsByKind[name] || [name];
-				state.weight_items = res.data.weight_items.filter((item: any) => {
+				filtered = res.data.weight_items.filter((item: any) => {
 					const v = String(item.value || '').toLowerCase();
 					return kws.some(kw => v.includes(kw));
 				});
+			}
+			state.weight_items = filtered;
+			const current = String(weight.value || '').toLowerCase();
+			const exists = filtered.some((it: any) => String(it.value || '').toLowerCase() === current);
+			if (!exists) {
+				weight.value = filtered.length ? filtered[0].value : '';
+			}
+			// 未选检测类型时，依据已选模型自动推断并填充 kind
+			if (!name) {
+				const wsel = String(weight.value || '');
+				if (wsel && !kind.value) {
+					const inferred2 = inferKindFromWeight(wsel);
+					if (inferred2) {
+						kind.value = inferred2;
+					}
+				}
 			}
 		} else {
 			ElMessage.error(res.msg);

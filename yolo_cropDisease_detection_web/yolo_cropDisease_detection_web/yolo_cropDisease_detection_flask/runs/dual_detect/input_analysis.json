@@ -1,33 +1,54 @@
 {
   "schema_version": "1.1",
-  "summary": "课堂内共有4名学生，，阅读。",
+  "summary": "课堂内共有25名学生，，部分存在低头、阅读、使用手机等行为。",
   "observations": [
-    "1名学生正在阅读（reading=1）。",
-    "课堂秩序总体正常，个体差异存在。",
-    "课堂秩序总体正常，个体差异存在。",
-    "课堂秩序总体正常，个体差异存在。"
+    "8名学生坐姿端正（upright=8）。",
+    "3名学生处于低头状态（bow_head=3），可能与阅读或设备操作相关。",
+    "2名学生正在阅读（reading=2）。",
+    "6名学生抬头注视前方（raise_head=6），关注课堂。",
+    "课桌/使用中的手机合计5（using_phone=1, phone=4）。"
   ],
   "metrics": {
-    "head_down_rate": 0,
-    "phone_usage_rate": 0,
-    "reading_rate": 25,
+    "head_down_rate": 12,
+    "phone_usage_rate": 20,
+    "reading_rate": 8,
     "hand_raise_rate": 0,
     "looking_around_rate": 0,
-    "writing_rate": 75,
+    "writing_rate": 0,
     "sleeping_rate": 0,
-    "distracted_rate": 0,
+    "distracted_rate": 20,
     "interaction_level": "low",
-    "focus_score": 100,
-    "activity_score": 50
+    "focus_score": 77,
+    "activity_score": 4
   },
   "per_class": {
-    "writing": {
+    "upright": {
+      "count": 8,
+      "rate": 32
+    },
+    "bow_head": {
       "count": 3,
-      "rate": 75
+      "rate": 12
+    },
+    "raise_head": {
+      "count": 6,
+      "rate": 24
     },
     "reading": {
+      "count": 2,
+      "rate": 8
+    },
+    "sleep": {
       "count": 1,
-      "rate": 25
+      "rate": 4
+    },
+    "using_phone": {
+      "count": 1,
+      "rate": 4
+    },
+    "phone": {
+      "count": 4,
+      "rate": 16
     }
   },
   "spatial": {
@@ -39,13 +60,13 @@
       ],
       [
         2,
-        2,
+        10,
         2
       ],
       [
-        2,
-        0,
-        0
+        16,
+        10,
+        10
       ]
     ],
     "image_size": {
@@ -67,11 +88,13 @@
   "provenance": {
     "generated_by": "local_postprocess"
   },
-  "head": 4,
-  "人数": 4,
-  "risks": [],
+  "head": 25,
+  "人数": 25,
+  "risks": [
+    "手机数量较多（5），可能影响部分学生注意力。"
+  ],
   "suggestions": [
-    "增加抬头交流的提问/点名频率，穿插短时任务促进眼神交流。",
-    "设计小组讨论或举手问答环节，提高互动密度。"
+    "提醒规范手机使用，必要时设置收纳或定时检查，强化课堂专注度。",
+    "增加抬头交流的提问/点名频率，穿插短时任务促进眼神交流。"
   ]
 }
