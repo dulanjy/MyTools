@@ -1,0 +1,16 @@
+{
+  "url": "http://localhost:9999/api/imgRecords",
+  "status_code": 404,
+  "response_text": "{\"timestamp\":\"2025-11-17T11:38:11.696+00:00\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/api/imgRecords\"}",
+  "payload": {
+    "username": "admin",
+    "inputImg": "http://localhost:9999/files/bdb3509aeebc4b44898ea22321a3683c_17DEFF45B9BA32CF5E5E8975F71858C4.png",
+    "outImg": "http://localhost:9999/files/4fd6e4a69e3c471cbfc5f9ace234bedf_result.jpg",
+    "weight": "best_per_counts.pt",
+    "allTime": "0.110s",
+    "conf": null,
+    "startTime": "2025-11-17 19:38:10",
+    "label": "[]",
+    "confidence": "[]"
+  }
+}

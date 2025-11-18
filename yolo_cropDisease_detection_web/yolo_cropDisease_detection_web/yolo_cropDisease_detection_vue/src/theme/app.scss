@@ -17,19 +17,19 @@
 
 :root {
 	--next-color-white: #ffffff;
-	--next-bg-main-color: #f8f8f8;
-	--next-bg-color: #f5f5ff;
-	--next-border-color-light: #f1f2f3;
-	--next-color-primary-lighter: #ecf5ff;
+	--next-bg-main-color: #f8f9fa;
+	--next-bg-color: #ffffff;
+	--next-border-color-light: #e9ecef;
+	--next-color-primary-lighter: #e6f2ff;
 	--next-color-success-lighter: #f0f9eb;
 	--next-color-warning-lighter: #fdf6ec;
 	--next-color-danger-lighter: #fef0f0;
-	--next-color-dark-hover: #0000001a;
-	--next-color-menu-hover: rgba(0, 0, 0, 0.2);
+	--next-color-dark-hover: #f1f3f5;
+	--next-color-menu-hover: rgba(0, 102, 255, 0.08);
 	--next-color-user-hover: rgba(0, 0, 0, 0.04);
-	--next-color-seting-main: #e9eef3;
-	--next-color-seting-aside: #d3dce6;
-	--next-color-seting-header: #b3c0d1;
+	--next-color-seting-main: #f1f3f5;
+	--next-color-seting-aside: #e9ecef;
+	--next-color-seting-header: #dee2e6;
 }
 
 html,
@@ -39,7 +39,7 @@ body,
 	padding: 0;
 	width: 100%;
 	height: 100%;
-	font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', SimSun, sans-serif;
 	font-weight: 400;
 	-webkit-font-smoothing: antialiased;
 	-webkit-tap-highlight-color: transparent;
@@ -47,6 +47,7 @@ body,
 	font-size: 14px;
 	overflow: hidden;
 	position: relative;
+	color: var(--tech-text-primary, #212529);
 }
 
 /* 主布局样式
@@ -66,14 +67,15 @@ body,
 	}
 
 	.layout-aside {
-		background: var(--next-bg-menuBar);
-		box-shadow: 2px 0 6px rgb(0 21 41 / 1%);
+		background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
 		height: inherit;
 		position: relative;
 		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		overflow-x: hidden !important;
+		border-right: 1px solid var(--tech-border-color, #e9ecef);
 
 		.el-scrollbar__view {
 			overflow: hidden;
@@ -83,6 +85,9 @@ body,
 	.layout-header {
 		padding: 0 !important;
 		height: auto !important;
+		background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+		border-bottom: 1px solid var(--tech-border-color, #e9ecef);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 	}
 
 	.layout-main {
@@ -123,8 +128,8 @@ body,
 			background: var(--el-color-white);
 			width: 100%;
 			height: 100%;
-			border-radius: 4px;
-			border: 1px solid var(--el-border-color-light, #ebeef5);
+			border-radius: 8px;
+			border: 1px solid var(--tech-border-color, #e9ecef);
 			overflow: hidden;
 		}
 	}

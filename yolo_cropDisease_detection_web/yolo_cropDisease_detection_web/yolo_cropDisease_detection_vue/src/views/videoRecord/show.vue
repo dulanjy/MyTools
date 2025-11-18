@@ -199,7 +199,7 @@ onMounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
+	background: #ffffff;
 	border-radius: 8px;
 	border: 1px solid #e0e0e0; /* 边框 */
 	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); /* 内部阴影 */

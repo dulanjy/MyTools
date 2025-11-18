@@ -1,67 +1,67 @@
 <template>
 	<div class="system-role-container layout-padding">
-	<div class="system-role-dialog-container">
-		<el-card shadow="hover" header="个人信息" class="cards">
-			<el-form ref="roleDialogFormRef" :model="state.form" size="default" label-width="100px">
-				<el-row :gutter="35">
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="头像：">
-							<div class="imgs">
-								<el-upload
-									v-model="state.form.avatar"
-									ref="uploadFile"
-									class="avatar-uploader"
-									action="http://localhost:9999/files/upload"
-									:show-file-list="false"
-									:on-success="handleAvatarSuccessone"
-								>
-									<img v-if="imageUrl" :src="imageUrl" class="avatar" />
-									<el-icon v-if="!imageUrl"><Plus /></el-icon>
-								</el-upload>
-							</div>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="账号" style="color: #000">
-							<el-input v-model="state.form.username" placeholder="请输入账号" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="密码">
-							<el-input v-model="state.form.password" placeholder="请输入密码" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="姓名" style="color: #000">
-							<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="性别">
-							<el-input v-model="state.form.sex" placeholder="请输入性别" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="Email">
-							<el-input v-model="state.form.email" placeholder="请输入Email" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="手机号码">
-							<el-input v-model="state.form.tel" placeholder="请输入手机号码" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="角色">
-							<el-input v-model="state.form.role" disabled placeholder="请输入角色" clearable></el-input>
-						</el-form-item>
-					</el-col>
-				</el-row>
-			</el-form>
-			<el-button type="primary" @click="upData" size="default" style="float: right;margin-right: 15%;">确认修改</el-button>
-		</el-card>
+		<div class="system-role-dialog-container">
+			<el-card shadow="hover" header="个人信息" class="cards">
+				<el-form ref="roleDialogFormRef" :model="state.form" size="default" label-width="100px">
+					<el-row :gutter="35">
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="头像：">
+								<div class="imgs">
+									<el-upload
+										v-model="state.form.avatar"
+										ref="uploadFile"
+										class="avatar-uploader"
+										action="http://localhost:9999/files/upload"
+										:show-file-list="false"
+										:on-success="handleAvatarSuccessone"
+									>
+										<img v-if="imageUrl" :src="imageUrl" class="avatar" />
+										<el-icon v-if="!imageUrl"><Plus /></el-icon>
+									</el-upload>
+								</div>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="账号" style="color: #000">
+								<el-input v-model="state.form.username" placeholder="请输入账号" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="密码">
+								<el-input v-model="state.form.password" placeholder="请输入密码" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="姓名" style="color: #000">
+								<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="性别">
+								<el-input v-model="state.form.sex" placeholder="请输入性别" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="Email">
+								<el-input v-model="state.form.email" placeholder="请输入Email" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="手机号码">
+								<el-input v-model="state.form.tel" placeholder="请输入手机号码" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
+							<el-form-item label="角色">
+								<el-input v-model="state.form.role" disabled placeholder="请输入角色" clearable></el-input>
+							</el-form-item>
+						</el-col>
+					</el-row>
+				</el-form>
+				<el-button type="primary" @click="upData" size="default" class="confirm-button">确认修改</el-button>
+			</el-card>
+		</div>
 	</div>
-</div>
 </template>
 
 <script setup lang="ts" name="personal">
@@ -145,23 +145,50 @@ onMounted(() => {
 .system-role-container {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-}
-.system-role-dialog-container{
-	width: 60%;
+	min-height: 100vh;
+	padding: 20px;
 }
 
-.cards{
-	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-	border-radius: 10px;
+.system-role-dialog-container {
+	width: 100%;
+	max-width: 600px;
+}
+
+.cards {
+	background: #ffffff;
+	border-radius: 12px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+	border: none;
+	text-align: center;
+
+	:deep(.el-card__header) {
+		background-color: transparent !important;
+		border-bottom: none !important;
+		padding: 24px 20px 20px !important;
+		text-align: center;
+		width: 100%;
+	}
+
+	:deep(.el-card__body) {
+		padding: 0 20px 20px 20px !important;
+		width: 100%;
+	}
+
+	:deep(.el-card__title) {
+		font-size: 18px;
+		font-weight: 700;
+		color: #212529;
+		letter-spacing: 0.3px;
+	}
 }
 
 .el-form {
-	width: 75%;
-	margin-left: 10%;
+	width: 100%;
 }
 
 .imgs {
@@ -172,18 +199,53 @@ onMounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 1px dashed #d9d9d9;
-	border-radius: 6px;
+	border: 2px dashed #e0e0e0;
+	border-radius: 8px;
 	cursor: pointer;
 	margin-bottom: 20px;
+	transition: all 0.3s ease;
+	background-color: #fafafa;
+
+	&:hover {
+		border-color: #409eff;
+		background-color: #f5f7fa;
+	}
 }
 
 .avatar-uploader .el-upload:hover {
 	border-color: #409eff;
 }
+
 .avatar {
 	width: 120px;
 	height: 120px;
 	display: block;
+	border-radius: 8px;
+}
+
+.confirm-button {
+	width: 220px;
+	height: 44px;
+	margin-top: 24px;
+	margin-bottom: 20px;
+	font-weight: 600;
+	font-size: 16px;
+	letter-spacing: 0.5px;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #409eff 0%, #53a8ff 100%);
+	border: none;
+	color: #ffffff;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(64, 158, 255, 0.3);
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
+	}
+
+	&:active {
+		transform: translateY(0);
+		box-shadow: 0 2px 10px rgba(64, 158, 255, 0.3);
+	}
 }
 </style>

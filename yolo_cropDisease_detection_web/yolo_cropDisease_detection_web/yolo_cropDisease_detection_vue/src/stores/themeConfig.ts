@@ -103,7 +103,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: true,
 			// 水印文案
-			wartermarkText: '林枫',
+			wartermarkText: 'STU - STUDENT BEHAVIOR DETECTION',
 
 			/**
 			 * 其它设置
@@ -136,11 +136,11 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局网站标题 / 副标题
 			 */
 			// 网站主标题（菜单导航、浏览器当前网页标题）
-			globalTitle: 'linfeng',
+			globalTitle: 'STUDENT BEHAVIOR DETECTION',
 			// 网站副标题（登录页顶部文字）
-			globalViceTitle: 'linfeng',
+			globalViceTitle: 'YOLOV11智能检测系统',
 			// 网站副标题（登录页顶部文字）
-			globalViceTitleMsg: '专注、免费、开源、维护、解疑',
+			globalViceTitleMsg: 'YOLOV11/VUE3/TS/PINIA/VITE/ELMENTPLUS',
 			// 默认初始语言，可选值"<zh-cn|en|zh-tw>"，默认 zh-cn
 			globalI18n: 'zh-cn',
 			// 默认全局组件大小，可选值"<large|'default'|small>"，默认 'large'

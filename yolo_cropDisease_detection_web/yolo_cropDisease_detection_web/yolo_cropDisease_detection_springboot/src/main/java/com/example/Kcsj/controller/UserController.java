@@ -15,10 +15,6 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.Objects;
 
-/**
- * @author 林枫
- * @date 2023年02月27日 16:15
- */
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
 @RequestMapping("/user")

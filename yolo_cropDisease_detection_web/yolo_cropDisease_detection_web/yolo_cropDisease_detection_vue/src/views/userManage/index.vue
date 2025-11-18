@@ -107,7 +107,12 @@ const getTableData = () => {
 					type: 'error',
 					message: res.msg,
 				});
+				state.tableData.loading = false;
 			}
+		})
+		.catch((e) => {
+			ElMessage.error(String(e));
+			state.tableData.loading = false;
 		});
 };
 
@@ -142,6 +147,8 @@ const onRowDel = (row: any) => {
 						message: res.msg,
 					});
 				}
+			}).catch((e) => {
+				ElMessage.error(String(e));
 			});
 			setTimeout(() => {
 				getTableData();
@@ -174,6 +181,7 @@ onMounted(() => {
 		.el-table {
 			background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
 			flex: 1;
+			min-height: 400px;
 		}
 	}
 }

@@ -1,46 +1,109 @@
 <template>
 	<div class="system-predict-container layout-padding">
-		<div class="system-predict-padding layout-padding-auto layout-padding-view">
-			<div class="header">
-				<div class="weight">
-					<el-select v-model="kind" placeholder="请选择检测类型" size="large" style="width: 200px" @change="getData">
+		<div class="system-predict-padding layout-padding-auto layout-padding-view predict-view">
+			<!-- 控制面板 -->
+			<div class="control-panel">
+				<div class="control-group">
+					<label class="control-label">检测类型</label>
+					<el-select 
+						v-model="kind" 
+						placeholder="请选择检测类型" 
+						size="large" 
+						@change="getData"
+						class="control-select"
+					>
 						<el-option v-for="item in state.kind_items" :key="item.value" :label="item.label"
 							:value="item.value" />
 					</el-select>
 				</div>
-				<div class="weight">
-					<el-select v-model="weight" placeholder="请选择模型" size="large" style="margin-left: 20px;width: 200px" @change="onWeightChange">
+				<div class="control-group">
+					<label class="control-label">模型选择</label>
+					<el-select 
+						v-model="weight" 
+						placeholder="请选择模型" 
+						size="large" 
+						@change="onWeightChange"
+						class="control-select"
+					>
 						<el-option v-for="item in state.weight_items" :key="item.value" :label="item.label"
 							:value="item.value" />
 					</el-select>
 				</div>
-				<div class="conf" style="margin-left: 20px;display: flex; flex-direction: row;">
-					<div
-						style="font-size: 14px;margin-right: 20px;display: flex;justify-content: start;align-items: center;color: #909399;">
-						设置最小置信度阈值</div>
-					<el-slider v-model="conf" :format-tooltip="formatTooltip" style="width: 300px;" />
+				<div class="control-group">
+					<label class="control-label">置信度阈值</label>
+					<div class="slider-wrapper">
+						<el-slider v-model="conf" :format-tooltip="formatTooltip" class="control-slider" />
+						<span class="slider-value">{{ (conf / 100).toFixed(2) }}</span>
+					</div>
 				</div>
-				<div class="button-section" style="margin-left: 20px">
-					<el-button type="primary" @click="upData" class="predict-button">开始预测</el-button>
+			<el-button type="primary" @click="upData" :loading="isLoading" class="predict-button">
+				<span>🚀 开始预测</span>
+			</el-button>
+			</div>
+
+			<!-- 上传和结果区 -->
+			<div class="content-area">
+				<!-- 左侧上传区 -->
+				<div class="upload-section">
+					<el-card shadow="hover" class="upload-card">
+						<el-upload 
+							v-model="state.img" 
+							ref="uploadFile" 
+							class="avatar-uploader"
+							action="http://localhost:9999/files/upload" 
+							:show-file-list="false"
+							:on-success="handleAvatarSuccessone"
+						>
+							<div class="upload-content">
+								<img v-if="imageUrl" :src="imageUrl" class="preview-image" />
+								<div v-else class="upload-placeholder">
+									<el-icon class="upload-icon">
+										<Plus />
+									</el-icon>
+									<p class="upload-text">点击上传图片</p>
+									<p class="upload-hint">支持 JPG、PNG</p>
+								</div>
+							</div>
+						</el-upload>
+					</el-card>
+				</div>
+
+				<!-- 右侧结果区 -->
+				<div class="result-section" v-if="state.predictionResult.label">
+					<el-card class="result-card" shadow="hover">
+						<template #header>
+							<div class="result-header">
+								<span>✨ 预测结果</span>
+							</div>
+						</template>
+						<div class="result-content">
+							<div class="result-item">
+								<span class="result-label">识别结果</span>
+								<span class="result-value">{{ state.predictionResult.label }}</span>
+							</div>
+							<el-divider />
+							<div class="result-item">
+								<span class="result-label">预测概率</span>
+								<div class="confidence-bar">
+									<div class="confidence-fill" :style="{ width: parseFloat(state.predictionResult.confidence) + '%' }"></div>
+									<span class="confidence-text">{{ state.predictionResult.confidence }}</span>
+								</div>
+							</div>
+							<el-divider />
+							<div class="result-item">
+								<span class="result-label">处理耗时</span>
+								<span class="result-value">{{ state.predictionResult.allTime }}</span>
+							</div>
+						</div>
+					</el-card>
+				</div>
+
+				<!-- 空状态 -->
+				<div class="empty-state" v-if="!state.predictionResult.label">
+					<div class="empty-icon">🖼️</div>
+					<p class="empty-text">上传图片进行预测</p>
 				</div>
 			</div>
-			<el-card shadow="hover" class="card">
-				<el-upload v-model="state.img" ref="uploadFile" class="avatar-uploader"
-					action="http://localhost:9999/files/upload" :show-file-list="false"
-					:on-success="handleAvatarSuccessone">
-					<img v-if="imageUrl" :src="imageUrl" class="avatar" />
-					<el-icon v-else class="avatar-uploader-icon">
-						<Plus />
-					</el-icon>
-				</el-upload>
-			</el-card>
-			<el-card class="result-section" v-if="state.predictionResult.label">
-				<div class="bottom">
-					<div style="width: 33%">识别结果：{{ state.predictionResult.label }}</div>
-					<div style="width: 33%">预测概率：{{ state.predictionResult.confidence }}</div>
-					<div style="width: 33%">总时间：{{ state.predictionResult.allTime }}</div>
-				</div>
-			</el-card>
 		</div>
 	</div>
 </template>
@@ -61,6 +124,7 @@ const conf = ref('');
 const weight = ref('');
 const kind = ref('');
 const uploadFile = ref<UploadInstance>();
+const isLoading = ref(false);
 const stores = useUserInfo();
 const { userInfos } = storeToRefs(stores);
 const state = reactive({
@@ -185,6 +249,7 @@ const upData = () => {
 	state.form.kind = kind.value;
 	state.form.startTime = formatDate(new Date(), 'YYYY-mm-dd HH:MM:SS');
 	console.log(state.form);
+	isLoading.value = true;
 	request.post('/api/flask/predict', state.form).then((res) => {
 		if (res.code == 0) {
 			try {
@@ -222,6 +287,8 @@ const upData = () => {
 		} else {
 			ElMessage.error(res.msg);
 		}
+	}).catch((e) => ElMessage.error(String(e))).finally(() => {
+		isLoading.value = false;
 	});
 };
 
@@ -236,77 +303,336 @@ onMounted(() => {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+}
 
-	.system-predict-padding {
-		padding: 15px;
+.predict-view {
+	padding: 24px !important;
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
 
-		.el-table {
-			flex: 1;
-		}
+/* 控制面板 */
+.control-panel {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
+	gap: 16px;
+	align-items: flex-end;
+	padding: 20px;
+	background: var(--tech-white);
+	border: 1px solid var(--tech-border-color);
+	border-radius: 12px;
+	box-shadow: var(--tech-shadow-sm);
+	transition: all var(--tech-transition-base);
+
+	&:hover {
+		box-shadow: var(--tech-shadow-md);
 	}
 }
 
-.header {
-	width: 100%;
-	height: 5%;
+.control-group {
 	display: flex;
-	justify-content: start;
+	flex-direction: column;
+	gap: 8px;
+
+	.control-label {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--tech-text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.control-select {
+		width: 100%;
+	}
+}
+
+.slider-wrapper {
+	display: flex;
 	align-items: center;
-	font-size: 20px;
-}
+	gap: 12px;
 
-.card {
-	width: 100%;
-	height: 95%;
-	border-radius: 10px;
-	margin-top: 15px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
+	.control-slider {
+		flex: 1;
+		min-width: 150px;
+	}
 
-.avatar-uploader .avatar {
-	width: 100%;
-	height: 600px;
-	display: block;
-}
-
-.el-icon.avatar-uploader-icon {
-	font-size: 28px;
-	color: #8c939d;
-	width: 100%;
-	height: 600px;
-	text-align: center;
-}
-
-
-.button-section {
-	display: flex;
-	justify-content: center;
+	.slider-value {
+		min-width: 50px;
+		font-weight: 600;
+		color: var(--tech-primary);
+		font-size: 14px;
+		text-align: right;
+	}
 }
 
 .predict-button {
-	width: 100%;
-	/* 按钮宽度填满 */
+	font-weight: 600;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	min-width: 140px;
+	height: 40px;
 }
 
-.result-section {
-	width: 100%;
-	margin-top: 15px;
-	text-align: center;
+/* 内容区 */
+.content-area {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	flex: 1;
+	min-height: 0;
+}
+
+/* 上传区 */
+.upload-section {
 	display: flex;
-	/* 添加 display: flex; */
 	flex-direction: column;
-	border-radius: 6px;
+	min-height: 400px;
 }
 
-.bottom {
+.upload-card {
+	height: 100%;
+	border: 2px dashed var(--tech-border-color) !important;
+	background: transparent !important;
+	transition: all var(--tech-transition-base);
+
+	&:hover {
+		border-color: var(--tech-primary);
+		box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+	}
+
+	:deep(.el-card__body) {
+		padding: 0 !important;
+		height: 100%;
+	}
+}
+
+.avatar-uploader {
 	width: 100%;
-	font-size: 18px;
+	height: 100%;
+
+	:deep(.el-upload) {
+		width: 100%;
+		height: 100%;
+	}
+
+	:deep(.el-upload-dragger) {
+		width: 100%;
+		height: 100%;
+		padding: 0 !important;
+		border: none !important;
+		background: transparent !important;
+	}
+}
+
+.upload-content {
 	display: flex;
-	/* 添加 display: flex; */
-	flex-direction: row;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 400px;
+	background: linear-gradient(135deg, var(--tech-primary-lighter) 0%, var(--tech-accent-light) 100%);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all var(--tech-transition-base);
+
+	&:hover {
+		background: linear-gradient(135deg, #e0f2ff 0%, #e0f7ff 100%);
+	}
+}
+
+.preview-image {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+	border-radius: 8px;
+	padding: 12px;
+}
+
+.upload-placeholder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	color: var(--tech-primary);
+	text-align: center;
+
+	.upload-icon {
+		font-size: 48px;
+		opacity: 0.6;
+	}
+
+	.upload-text {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.upload-hint {
+		margin: 0;
+		font-size: 12px;
+		color: var(--tech-text-tertiary);
+		font-weight: 400;
+	}
+}
+
+/* 结果区 */
+.result-section {
+	display: flex;
+	flex-direction: column;
+}
+
+.result-card {
+	height: 100%;
+	border: 1px solid var(--tech-border-color);
+	border-radius: 12px;
+	overflow: hidden;
+	transition: all var(--tech-transition-base);
+
+	&:hover {
+		box-shadow: var(--tech-shadow-lg);
+		border-color: var(--tech-primary-light);
+	}
+
+	:deep(.el-card__header) {
+		background: linear-gradient(135deg, var(--tech-primary-lighter) 0%, var(--tech-accent-light) 100%);
+		border: none;
+		padding: 16px 20px;
+
+		.result-header {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: 600;
+			color: var(--tech-primary);
+			font-size: 15px;
+			letter-spacing: 0.5px;
+		}
+	}
+
+	:deep(.el-card__body) {
+		padding: 20px;
+	}
+}
+
+.result-content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.result-item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+
+	.result-label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--tech-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.result-value {
+		font-size: 16px;
+		font-weight: 700;
+		color: var(--tech-primary);
+		word-break: break-all;
+	}
+}
+
+.confidence-bar {
+	position: relative;
+	width: 100%;
+	height: 32px;
+	background: var(--tech-bg-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--tech-border-color);
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+
+	.confidence-fill {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		background: linear-gradient(90deg, var(--tech-primary) 0%, var(--tech-accent) 100%);
+		border-radius: 8px;
+		transition: width var(--tech-transition-base);
+	}
+
+	.confidence-text {
+		position: relative;
+		z-index: 1;
+		width: 100%;
+		text-align: center;
+		font-weight: 700;
+		color: var(--tech-primary);
+		font-size: 14px;
+	}
+}
+
+.el-divider {
+	margin: 8px 0;
+}
+
+/* 空状态 */
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 400px;
+	text-align: center;
+	color: var(--tech-text-tertiary);
+
+	.empty-icon {
+		font-size: 64px;
+		margin-bottom: 16px;
+		opacity: 0.6;
+	}
+
+	.empty-text {
+		font-size: 16px;
+		margin: 0;
+	}
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+	.control-panel {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.content-area {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.predict-view {
+		padding: 16px !important;
+		gap: 16px;
+	}
+
+	.control-panel {
+		grid-template-columns: 1fr;
+		gap: 12px;
+		padding: 16px;
+	}
+
+	.predict-button {
+		width: 100%;
+	}
+
+	.upload-content {
+		min-height: 300px;
+	}
 }
 </style>

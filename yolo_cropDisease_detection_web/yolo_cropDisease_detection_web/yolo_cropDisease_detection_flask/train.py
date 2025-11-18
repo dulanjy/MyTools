@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time : 2024-12-2024/12/22 11:25
-# @Author : 林枫
-# @File : train.py
 
 from ultralytics import YOLO
 import warnings

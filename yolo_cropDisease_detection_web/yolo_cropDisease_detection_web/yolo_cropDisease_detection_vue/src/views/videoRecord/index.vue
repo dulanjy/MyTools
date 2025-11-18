@@ -104,7 +104,12 @@ const getTableData = () => {
 					type: 'error',
 					message: res.msg,
 				});
+				state.tableData.loading = false;
 			}
+		})
+		.catch((e) => {
+			ElMessage.error(String(e));
+			state.tableData.loading = false;
 		});
 };
 
@@ -131,6 +136,8 @@ const onRowDel = (row: any) => {
 						message: res.msg,
 					});
 				}
+			}).catch((e) => {
+				ElMessage.error(String(e));
 			});
 			setTimeout(() => {
 				getTableData();

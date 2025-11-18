@@ -1,0 +1,16 @@
+{
+  "url": "http://localhost:9999/api/imgRecords",
+  "status_code": 404,
+  "response_text": "{\"timestamp\":\"2025-11-17T11:37:58.675+00:00\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/api/imgRecords\"}",
+  "payload": {
+    "username": "admin",
+    "inputImg": "http://localhost:9999/files/3d5bd2adf8d444bf8d266ee0671de196_7DEA0041D935FED26EBCDFE8B52CCE33.jpg",
+    "outImg": "http://localhost:9999/files/d39301c1d22d4e189ba42aff216fcb06_result.jpg",
+    "weight": "best_student.pt",
+    "allTime": "0.076s",
+    "conf": null,
+    "startTime": "2025-11-17 19:37:57",
+    "label": "[]",
+    "confidence": "[]"
+  }
+}

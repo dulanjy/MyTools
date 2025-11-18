@@ -102,15 +102,22 @@ defineExpose({
 .layout-search-dialog {
 	position: relative;
 	:deep(.el-dialog) {
-		.el-dialog__header,
+		padding: 0;
+		/* Remove dialog header and body entirely */
+		.el-dialog__header {
+			display: none !important;
+		}
 		.el-dialog__body {
-			display: none;
+			display: none !important;
+			padding: 0 !important;
 		}
 		.el-dialog__footer {
 			position: absolute;
 			left: 50%;
 			transform: translateX(-50%);
 			top: -53vh;
+			border-top: none;
+			padding: 0;
 		}
 	}
 	:deep(.el-autocomplete) {

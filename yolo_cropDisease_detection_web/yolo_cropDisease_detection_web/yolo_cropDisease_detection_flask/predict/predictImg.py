@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time : 2024-12-26 12:10
-# @Author : 林枫
-# @File : predictImg.py
-import json
 import time
 from ultralytics import YOLO
 

@@ -112,7 +112,12 @@ const getTableData = () => {
 				state.tableData.total = res.data.total;
 			} else {
 				ElMessage({ type: 'error', message: res.msg });
+				state.tableData.loading = false;
 			}
+		})
+		.catch((e) => {
+			ElMessage.error(String(e));
+			state.tableData.loading = false;
 		});
 };
 
@@ -159,6 +164,8 @@ const onRowDel = (row: any) => {
 						message: res.msg,
 					});
 				}
+			}).catch((e) => {
+				ElMessage.error(String(e));
 			});
 			setTimeout(() => {
 				getTableData();
@@ -190,6 +197,7 @@ onMounted(() => {
 
 		.el-table {
 			flex: 1;
+			min-height: 400px;
 		}
 	}
 }

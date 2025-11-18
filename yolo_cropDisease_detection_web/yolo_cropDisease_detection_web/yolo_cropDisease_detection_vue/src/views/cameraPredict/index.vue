@@ -251,7 +251,7 @@ onMounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
+	background: #ffffff;
 	/* 防止视频溢出 */
 }
 
