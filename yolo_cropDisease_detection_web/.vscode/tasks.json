@@ -57,7 +57,7 @@
         "Spring: Run (9999)",
         "Vite: Dev (8888)"
       ],
-      "dependsOrder": "parallel",
+      "dependsOrder": "sequence",
       "problemMatcher": []
     }
   ]
