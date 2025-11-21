@@ -63,6 +63,21 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				},
 			},
 			{
+				path: '/behaviorBi',
+				name: 'behaviorBi',
+				component: () => import('/@/views/behaviorBi/index.vue'),
+				meta: {
+					title: '学生行为分析BI',
+					isLink: '',
+					isHide: false,
+					isKeepAlive: true,
+					isAffix: false,
+					isIframe: false,
+					roles: ['admin', 'common', 'others'],
+					icon: 'iconfont icon-shujukeshihua',
+				},
+			},
+			{
 				path: '/imgPredict',
 				name: 'imgPredict',
 				component: () => import('/@/views/imgPredict/index.vue'),
@@ -128,13 +143,13 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				component: () => import('/@/views/videoRecord/index.vue'),
 				meta: {
 					title: '视频识别记录',
-					isLink: '',
-					isHide: false,
-					isKeepAlive: true,
-					isAffix: false,
-					isIframe: false,
-					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shipinjilu',
+				 isLink: '',
+				 isHide: false,
+				 isKeepAlive: true,
+				 isAffix: false,
+				 isIframe: false,
+				 roles: ['admin', 'common', 'others'],
+				 icon: 'iconfont icon-shipinjilu',
 				},
 			},
 			{
@@ -206,7 +221,7 @@ export const notFoundAndNoPower = [
 		component: () => import('/@/views/error/401.vue'),
 		meta: {
 			title: 'message.staticRoutes.noPower',
-			isHide: true,
+		 isHide: true,
 		},
 	},
 ];

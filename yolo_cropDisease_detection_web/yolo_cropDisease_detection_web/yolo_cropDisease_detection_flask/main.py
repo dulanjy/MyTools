@@ -1300,6 +1300,53 @@ class VideoProcessingApp:
                 saved_analysis_png_path = None
                 saved_reference_json_path = None
 
+        # -------- 新增：保存到 Spring Boot 数据库 --------
+        try:
+            if result_json and isinstance(result_json, dict):
+                # 提取关键指标
+                metrics = result_json.get('metrics') or {}
+                spatial = result_json.get('spatial') or {}
+                risks = result_json.get('risks') or []
+                suggestions = result_json.get('suggestions') or []
+                
+                # 提取分数
+                focus_score = 0
+                activity_score = 0
+                try:
+                    focus_score = int(metrics.get('focus_score', 0))
+                    activity_score = int(metrics.get('activity_score', 0))
+                except:
+                    pass
+
+                # 提取人数
+                student_count = 0
+                try:
+                    student_count = int(result_json.get('head') or result_json.get('人数') or 0)
+                except:
+                    pass
+
+                # 构造发送给 Spring Boot 的数据对象
+                # 对应 Java 实体类 BehaviorRecord 的字段
+                payload = {
+                    'classroomId': 'Class-Default', # 暂时硬编码，后续可从前端传参
+                    'studentCount': student_count,
+                    'focusScore': focus_score,
+                    'activityScore': activity_score,
+                    'interactionLevel': str(metrics.get('interaction_level', 'medium')),
+                    'metricsJson': json.dumps(metrics, ensure_ascii=False),
+                    'spatialJson': json.dumps(spatial, ensure_ascii=False),
+                    'risksJson': json.dumps(risks, ensure_ascii=False),
+                    'suggestionsJson': json.dumps(suggestions, ensure_ascii=False)
+                }
+
+                # 发送请求
+                base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
+                save_url = f"{base_url}/behavior/save"
+                requests.post(save_url, json=payload, timeout=5)
+        except Exception as e:
+            print(f"Failed to save behavior record to DB: {e}")
+        # -----------------------------------------------
+
         return jsonify({
             'status': 200,
             'message': '分析完成',
@@ -1523,7 +1570,7 @@ class VideoProcessingApp:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        video_writer = cv2.VideoWriter(self.paths['camera_output'], cv2.VideoWriter_fourcc(*'XVID'), 20, (640, 480))
+        video_writer = cv2.VideoWriter(self.paths['camera_output'], cv2.VideoWriter_fourcc(*'XVID'),  20, (640, 480))
         self.recording = True
 
         def generate():

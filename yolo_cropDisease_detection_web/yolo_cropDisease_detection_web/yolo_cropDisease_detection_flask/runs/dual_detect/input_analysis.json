@@ -1,63 +1,67 @@
 {
   "schema_version": "1.1",
-  "summary": "课堂内共有75名学生，，部分存在低头、阅读。",
+  "summary": "课堂内共有22名学生，，部分存在低头、阅读、使用手机等行为。",
   "observations": [
-    "34名学生坐姿端正（upright=34）。",
-    "21名学生处于低头状态（bow_head=21），可能与阅读或设备操作相关。",
-    "2名学生正在阅读（reading=2）。",
-    "13名学生抬头注视前方（raise_head=13），关注课堂。"
+    "2名学生坐姿端正（upright=2）。",
+    "11名学生处于低头状态（bow_head=11），可能与阅读或设备操作相关。",
+    "1名学生正在阅读（reading=1）。",
+    "课桌/使用中的手机合计4（using_phone=3, phone=1）。"
   ],
   "metrics": {
-    "head_down_rate": 28,
-    "phone_usage_rate": 0,
-    "reading_rate": 3,
+    "head_down_rate": 50,
+    "phone_usage_rate": 18,
+    "reading_rate": 5,
     "hand_raise_rate": 0,
-    "looking_around_rate": 7,
+    "looking_around_rate": 0,
     "writing_rate": 0,
     "sleeping_rate": 0,
-    "distracted_rate": 28,
+    "distracted_rate": 50,
     "interaction_level": "low",
-    "focus_score": 84,
-    "activity_score": 3
+    "focus_score": 56,
+    "activity_score": 2
   },
   "per_class": {
     "upright": {
-      "count": 34,
-      "rate": 45
-    },
-    "reading": {
       "count": 2,
-      "rate": 3
-    },
-    "raise_head": {
-      "count": 13,
-      "rate": 17
+      "rate": 9
     },
     "bow_head": {
-      "count": 21,
-      "rate": 28
+      "count": 11,
+      "rate": 50
     },
-    "turn_head": {
-      "count": 5,
-      "rate": 7
+    "sleep": {
+      "count": 4,
+      "rate": 18
+    },
+    "using_phone": {
+      "count": 3,
+      "rate": 14
+    },
+    "reading": {
+      "count": 1,
+      "rate": 5
+    },
+    "phone": {
+      "count": 1,
+      "rate": 5
     }
   },
   "spatial": {
     "grid3x3": [
       [
-        42,
-        50,
-        38
-      ],
-      [
-        4,
-        12,
-        4
-      ],
-      [
         0,
         0,
         0
+      ],
+      [
+        2,
+        6,
+        2
+      ],
+      [
+        12,
+        6,
+        16
       ]
     ],
     "image_size": {
@@ -79,12 +83,15 @@
   "provenance": {
     "generated_by": "local_postprocess"
   },
-  "head": 75,
-  "人数": 75,
+  "head": 22,
+  "人数": 22,
   "risks": [
+    "手机数量较多（4），可能影响部分学生注意力。",
     "低头/阅读行为较集中，可能削弱与教师的互动与反馈。"
   ],
   "suggestions": [
-    "增加抬头交流的提问/点名频率，穿插短时任务促进眼神交流。"
+    "提醒规范手机使用，必要时设置收纳或定时检查，强化课堂专注度。",
+    "增加抬头交流的提问/点名频率，穿插短时任务促进眼神交流。",
+    "设计小组讨论或举手问答环节，提高互动密度。"
   ]
 }
