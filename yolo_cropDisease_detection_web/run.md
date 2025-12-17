@@ -39,8 +39,8 @@ $OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 ## 启动 Flask（5000）
 在仓库根目录执行：
 ```powershell
-(C:\Users\hp1\anaconda3\Scripts\activate) ; (conda activate yolov8)
-cd G:\MyCode\MyTools\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_flask
+(D:\Software\anaconda3\envs\yolo11) ; (conda activate yolo11)
+cd /d D:\Software\yolo11\ultralytics-main\Web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_flask
 python .\main.py
 ```
 启动成功后，端口 5000 会处于 LISTENING。
@@ -48,7 +48,7 @@ python .\main.py
 ## 启动 Spring Boot（9999）
 在新的 PowerShell 窗口执行：
 ```powershell
-cd G:\MyCode\MyTools\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_springboot
+cd /d D:\Software\yolo11\ultralytics-main\Web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_springboot
 .\mvnw.cmd spring-boot:run -DskipTests
 ```
 启动成功后，端口 9999 会处于 LISTENING。
@@ -58,7 +58,7 @@ cd G:\MyCode\MyTools\yolo_cropDisease_detection_web\yolo_cropDisease_detection_w
 ## 启动前端 Vite（8888/若占用则 8889）
 在新的 PowerShell 窗口执行：
 ```powershell
-cd G:\MyCode\MyTools\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_vue
+cd /d D:\Software\yolo11\ultralytics-main\Web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_web\yolo_cropDisease_detection_vue
 npm run dev
 ```
 成功后终端会打印：
