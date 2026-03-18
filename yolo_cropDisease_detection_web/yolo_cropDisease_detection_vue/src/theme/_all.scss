@@ -1,0 +1,12 @@
+// 聚合导出：替代旧的多段 @import，用 @forward 构建统一入口
+// 说明：这里不强制将被引入文件改名为 _*.scss，保持现状即可。
+// 如后续需要命名空间/变量控制，可在此文件使用 hide/show/as 等高级语法。
+
+@forward 'app';
+@forward 'common/transition';
+@forward 'light-tech';
+@forward 'other';
+@forward 'element';
+@forward 'media/media';
+@forward 'waves';
+@forward 'dark';

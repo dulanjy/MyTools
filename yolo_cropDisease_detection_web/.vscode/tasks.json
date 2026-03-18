@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://json.schemastore.org/tasks.json",
   "version": "2.0.0",
   "tasks": [
@@ -11,7 +11,7 @@
         "C:\\Users\\hp1\\anaconda3\\Scripts\\activate && conda activate yolov8 && python main.py"
       ],
       "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask"
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask"
       },
       "isBackground": true,
       "problemMatcher": []
@@ -25,7 +25,7 @@
         ".\\mvnw.cmd spring-boot:run -DskipTests"
       ],
       "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot"
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot"
       },
       "isBackground": true,
       "problemMatcher": []
@@ -39,7 +39,7 @@
         "dev"
       ],
       "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue"
+        "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue"
       },
       "isBackground": true,
       "problemMatcher": []
@@ -62,3 +62,4 @@
     }
   ]
 }
+
