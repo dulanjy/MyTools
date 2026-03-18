@@ -1,5 +1,5 @@
 {
-	"inputImg": "G:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask/picture/test1.jpg",
+	"inputImg": "G:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_flask/picture/test1.jpg",
 	"weight": "best_student.pt",
 	"kind": "student",
 	"conf": 0.25

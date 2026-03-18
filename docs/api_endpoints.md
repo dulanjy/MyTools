@@ -1,6 +1,6 @@
 ## 学生行为检测与分析服务 API 一览（Flask）
 
-本文档汇总 `yolo_cropDisease_detection_flask/main.py` 中对外提供的 HTTP 接口，包含路径、方法、参数与返回说明，并标注关键行为与注意事项，便于联调与排障。
+本文档汇总 `yolo_studentBehavior_detection_flask/main.py` 中对外提供的 HTTP 接口，包含路径、方法、参数与返回说明，并标注关键行为与注意事项，便于联调与排障。
 
 基础信息
 - 基础地址：`http://localhost:<FLASK_PORT>`（默认 5000；也可由环境变量 `FLASK_PORT` 或 `PORT` 设置）
@@ -13,7 +13,7 @@
 - `SPRING_IMGRECORDS_PATH`：图片识别记录路径，默认 `/imgRecords`（回退尝试 `/api/imgRecords`）
 - `SPRING_VIDEORECORDS_PATH`：视频记录路径，默认 `/videoRecords`（回退尝试 `/api/videoRecords`）
 - `SPRING_CAMERARECORDS_PATH`：摄像头记录路径，默认 `/cameraRecords`（回退尝试 `/api/cameraRecords`）
-- 失败上报会落盘到 `yolo_cropDisease_detection_flask/runs/debug_img_records/*.json`，包含请求 URL、响应 body 与 payload，便于排查与补发。
+- 失败上报会落盘到 `yolo_studentBehavior_detection_flask/runs/debug_img_records/*.json`，包含请求 URL、响应 body 与 payload，便于排查与补发。
 
 ---
 

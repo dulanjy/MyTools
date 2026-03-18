@@ -11,7 +11,7 @@
 ### 1️⃣ 启动项目
 ```bash
 # 进入 Vue 项目目录
-cd yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue
+cd yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_vue
 
 # 安装依赖（如果还未安装）
 npm install

@@ -1,0 +1,90 @@
+# ------------------------------
+# OS junk
+# ------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ------------------------------
+# Editor / IDE
+# ------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Keep only shared VS Code workspace configs
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+.python-version
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.ipynb_checkpoints/
+
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------
+# Node / Frontend
+# ------------------------------
+**/node_modules/
+**/dist/
+**/.vite/
+*.tsbuildinfo
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.npm-cache/
+.npm/
+.pnpm-store/
+.yarn/
+
+# ------------------------------
+# Java / Maven / Gradle
+# ------------------------------
+**/target/
+**/.gradle/
+*.class
+*.jar
+*.war
+*.ear
+
+# ------------------------------
+# Runtime artifacts
+# ------------------------------
+**/runs/
+**/files/
+*.pid
+*.seed
+
+# ------------------------------
+# Local env overrides
+# ------------------------------
+.env.local
+.env.*.local
