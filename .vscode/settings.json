@@ -15,7 +15,7 @@
             "port": 3306,
             "driver": "MySQL",
             "name": "localhost_dev",
-            "database": "cropdisease",
+            "database": "student_behavior",
             "username": "root"
         }
     ],
