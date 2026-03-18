@@ -23,7 +23,7 @@
 			<el-col :span="12">
 				<el-card shadow="hover">
 					<template #header>
-						<span>专注度评分分布</span>
+						<span>专注度分布</span>
 					</template>
 					<div style="height: 300px" ref="barChartRef"></div>
 				</el-card>
@@ -33,9 +33,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, nextTick } from 'vue';
+import { defineComponent, nextTick, onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
-import axios from 'axios';
+import request from '/@/utils/request';
 
 export default defineComponent({
 	name: 'BehaviorBi',
@@ -47,21 +47,19 @@ export default defineComponent({
 		const initCharts = (data: any[]) => {
 			if (!data || data.length === 0) return;
 
-			// 1. 趋势图 (专注度 & 低头率)
 			const trendChart = echarts.init(trendChartRef.value!);
 			const dates = data.map((item) => new Date(item.recordTime).toLocaleDateString());
-			const focusScores = data.map((item) => item.focusScore);
-			
-            // 解析 metricsJson 计算人数
-            const getCount = (item: any, rateKey: string) => {
-                try {
-                    const metrics = JSON.parse(item.metricsJson || '{}');
-                    const rate = metrics[rateKey] || 0;
-                    return Math.round((item.studentCount || 0) * rate / 100);
-                } catch (e) {
-                    return 0;
-                }
-            };
+			const focusScores = data.map((item) => item.focusScore || 0);
+
+			const getCount = (item: any, rateKey: string) => {
+				try {
+					const metrics = JSON.parse(item.metricsJson || '{}');
+					const rate = metrics[rateKey] || 0;
+					return Math.round((item.studentCount || 0) * rate / 100);
+				} catch {
+					return 0;
+				}
+			};
 
 			const bowHeadCounts = data.map((item) => getCount(item, 'head_down_rate'));
 
@@ -80,15 +78,14 @@ export default defineComponent({
 				],
 			});
 
-			// 2. 饼图 (最新一次数据的行为分布)
 			const latest = data[data.length - 1];
-            const latestMetrics = JSON.parse(latest.metricsJson || '{}');
-            const latestStudentCount = latest.studentCount || 0;
-            
-            const bowCount = Math.round(latestStudentCount * (latestMetrics.head_down_rate || 0) / 100);
-            const phoneCount = Math.round(latestStudentCount * (latestMetrics.phone_usage_rate || 0) / 100);
-            const sleepCount = Math.round(latestStudentCount * (latestMetrics.sleeping_rate || 0) / 100);
-            const normalCount = Math.max(0, latestStudentCount - bowCount - phoneCount - sleepCount);
+			const latestMetrics = JSON.parse(latest.metricsJson || '{}');
+			const latestStudentCount = latest.studentCount || 0;
+
+			const bowCount = Math.round(latestStudentCount * (latestMetrics.head_down_rate || 0) / 100);
+			const phoneCount = Math.round(latestStudentCount * (latestMetrics.phone_usage_rate || 0) / 100);
+			const sleepCount = Math.round(latestStudentCount * (latestMetrics.sleeping_rate || 0) / 100);
+			const normalCount = Math.max(0, latestStudentCount - bowCount - phoneCount - sleepCount);
 
 			const pieChart = echarts.init(pieChartRef.value!);
 			pieChart.setOption({
@@ -109,13 +106,11 @@ export default defineComponent({
 				],
 			});
 
-			// 3. 柱状图 (专注度区间分布 - 模拟统计)
 			const barChart = echarts.init(barChartRef.value!);
-			// 简单统计一下专注度分布
-			const scoreRanges = { '0-60': 0, '60-80': 0, '80-100': 0 };
+			const scoreRanges: Record<string, number> = { '0-60': 0, '60-80': 0, '80-100': 0 };
 			data.forEach((d) => {
-				if (d.focusScore < 60) scoreRanges['0-60']++;
-				else if (d.focusScore < 80) scoreRanges['60-80']++;
+				if ((d.focusScore || 0) < 60) scoreRanges['0-60']++;
+				else if ((d.focusScore || 0) < 80) scoreRanges['60-80']++;
 				else scoreRanges['80-100']++;
 			});
 
@@ -126,22 +121,19 @@ export default defineComponent({
 				yAxis: { type: 'value' },
 				series: [{ type: 'bar', data: Object.values(scoreRanges) }],
 			});
-            
-            window.addEventListener('resize', () => {
-                trendChart.resize();
-                pieChart.resize();
-                barChart.resize();
-            });
+
+			window.addEventListener('resize', () => {
+				trendChart.resize();
+				pieChart.resize();
+				barChart.resize();
+			});
 		};
 
 		const fetchData = async () => {
 			try {
-				// 假设后端接口地址，请根据实际情况修改
-				// const res = await axios.get('/api/behavior/stats');
-                // 这里直接使用模拟数据，因为后端接口可能还没通
-                const res = await axios.get('http://localhost:9999/behavior/stats');
-				if (res.data.code === 200) {
-					initCharts(res.data.data);
+				const res = await request.get('/api/behavior/stats');
+				if (res.code == 0) {
+					initCharts(res.data || []);
 				}
 			} catch (error) {
 				console.error('Failed to fetch behavior stats:', error);

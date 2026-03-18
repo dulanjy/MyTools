@@ -83,3 +83,9 @@ $u = 'proxy' + [guid]::NewGuid().ToString('N').Substring(0,6); $payload = @{ use
 
 
 
+
+## 数据库索引优化执行
+在 `yolo_studentBehavior_detection_web/db` 目录执行：
+```powershell
+.\apply_optimize_student_behavior_schema.ps1 -DbHost 127.0.0.1 -Port 3306 -Database student_behavior -User root -Password 123456
+```

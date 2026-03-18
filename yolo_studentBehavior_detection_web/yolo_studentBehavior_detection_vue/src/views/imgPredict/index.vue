@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div class="system-predict-container layout-padding">
 		<div class="system-predict-padding layout-padding-auto layout-padding-view predict-view">
 			<div class="control-panel">
@@ -45,7 +45,7 @@
 							v-model="state.img"
 							ref="uploadFile"
 							class="avatar-uploader"
-							action="http://localhost:9999/files/upload"
+							action="/api/files/upload"
 							:show-file-list="false"
 							:on-success="handleAvatarSuccessone"
 						>
@@ -154,13 +154,13 @@ const getData = () => {
 			const allItems = Array.isArray(res.data?.weight_items) ? res.data.weight_items : [];
 			const filtered = filterWeightsByKind(allItems, kind.value);
 			state.weight_items = filtered;
-			// 闁煎浜滄慨鈺呮焻婢跺顏ョ紒妤婂厸缁斿瓨绋夐鍕埍闂佹澘绉跺▓鎴澪熼垾宕団偓鐑芥晬閸繄绉肩憸鐗堟尭婢х娀鏌呮径瀣仴濞戞挸绉村﹢顏堝礆濡ゅ嫨鈧啯绋夐鐔割槯闁?
+			// 闂佺厧顨庢禍婊勬叏閳哄懏鐒诲璺侯儏椤忋儳绱掑Δ濠傚幐缂佹柨鐡ㄧ粙澶愵敂閸曨偆鍩嶉梻浣规緲缁夎泛鈻撻幋婢喖鍨惧畷鍥ｅ亾閻戣姤鏅柛顐ｇ箘缁夎偐鎲搁悧鍫熷碍濠⒀呭█閺屽懏寰勭€ｎ亶浠存繛鎴炴尭缁夋潙锕㈤鍫濈婵°倕瀚ㄩ埀顒€鍟粙澶愵敇閻斿壊妲梺?
 			const current = String(weight.value || '').toLowerCase();
 			const exists = filtered.some((it: any) => String(it.value || '').toLowerCase() === current);
 			if (!exists) {
 				weight.value = filtered.length ? filtered[0].value : '';
 			}
-			// 闁兼眹鍎插﹢顓㈡焻婢跺顏ユ俊顐熷亾婵炴潙顑囩悮顐﹀垂鐎ｅ墎绀夊ù锝呮閸戯紕绱掕箛鏃€绠掑ù婊冩鑶╅柛銊ヮ儔閳ь剙顦扮€氥劑鏁嶇仦钘夌仧闁哄秷顫夊畵浣肝熼垾宕団偓鐑藉触瀹ュ牆娈伴柛鏂诲妽鐢綊寮鐐跺珯濠靛鍋勯崢?kind
+			// 闂佸吋鐪归崕鎻掞耿椤撱垺鐒诲璺侯儏椤忋儲淇婇鐔蜂壕濠电偞娼欓鍥╂偖椤愶箑鍨傞悗锝呭缁€澶娒归敐鍛棞闁告埊绱曠槐鎺曠疀閺冣偓缁犳帒霉濠婂啯顥為懚鈺呮煕閵娿儺鍎旈柍褜鍓欓ˇ鎵偓姘ュ姂閺佸秶浠﹂挊澶屼户闂佸搫绉烽～澶婄暤娴ｈ倽鐔煎灳瀹曞洠鍋撻悜钘夎Е鐎广儱鐗嗗▓浼存煕閺傝濡介悽顖氱秺瀵剟顢橀悙璺虹彲婵犻潧顦介崑鍕储?kind
 			if (!kind.value) {
 				const wsel = String(weight.value || '');
 				if (wsel && !kind.value) {
@@ -191,35 +191,35 @@ const upData = () => {
 			try {
 				res.data = JSON.parse(res.data);
 
-				// 濠碘€冲€归悘?res.data.label 闁哄嫷鍨伴悺褏绮敂鑳洬闁挎稑鑻崹顖滄喆閿濆棛鈧姤绋夐悜妯绘缂?
+				// 婵犵鈧啿鈧綊鎮?res.data.label 闂佸搫瀚烽崹浼存偤瑜忕划顓㈡晜閼愁垼娲梺鎸庣☉閼活垶宕归婊勫枂闁挎繂妫涢埀顒冨Г缁嬪鎮滃Ο缁橆啀缂?
 				if (typeof res.data.label === 'string') {
 					res.data.label = JSON.parse(res.data.label);
 				}
 
-				// 缁绢収鍠曠换?res.data.label 闁哄嫷鍨遍弳鐔虹磼閸曨偅鍊甸柛鎰Х閻ㄧ喖鎮?map
+				// 缂佺虎鍙庨崰鏇犳崲?res.data.label 闂佸搫瀚烽崹閬嶅汲閻旇櫣纾奸柛鏇ㄥ亝閸婄敻鏌涢幇顒傂ラ柣銊у枛閹?map
 				if (Array.isArray(res.data.label)) {
 					state.predictionResult.label = res.data.label.map(item => item.replace(/\\u([\dA-Fa-f]{4})/g, (_, code) =>
 						String.fromCharCode(parseInt(code, 16))
 					));
 				} else {
-					console.error("res.data.label 濞戞挸绉靛Σ鎼佸极閹殿喚鐭?", res.data.label);
+					console.error("res.data.label 婵炴垶鎸哥粔闈浳ｉ幖浣告瀬闁规鍠氶惌?", res.data.label);
 				}
 				state.predictionResult.confidence = res.data.confidence;
 				state.predictionResult.allTime = res.data.allTime;
 
-				// 閻熸洖妫涘ú濠囧储閻旈攱绂堥柣?
+				// 闁荤喐娲栧Λ娑樏烘繝鍥у偍闁绘棃鏀辩粋鍫ユ煟?
 				if (res.data.outImg) {
-					// 濞达綀娉曢弫銈夊嫉瀹ュ懎顫ら柛锝冨姀缁绘垿宕堕悙鍨暠闁哄倹婢樺ù姗€鎮ч崶顏嗙唴鐎?
+					// 婵炶揪缍€濞夋洟寮妶澶婂珘鐎广儱鎳庨～銈夋煕閿濆啫濮€缂佺粯鍨垮畷鍫曟倷閸偆鏆犻梺鍝勫€瑰妯好瑰鈧幃褔宕堕鍡欏敶閻?
 					imageUrl.value = res.data.outImg;
 				} else {
-					// 闁告熬绠戦崹顖涚┍濠靛牊娈岄柛妯煎枎濞存﹢鎮ч崶顏嗙唴鐎?
+					// 闂佸憡鐔粻鎴﹀垂椤栨稓鈹嶆繝闈涚墛濞堝矂鏌涘Ο鐓庢瀻婵炲瓨锕㈤幃褔宕堕鍡欏敶閻?
 					imageUrl.value = imageUrl.value;
 				}
 				console.log(state.predictionResult);
 			} catch (error) {
-				console.error('閻熸瑱绲鹃悗?JSON 闁哄啳娉涢崵顓㈡煥?', error);
+				console.error('闁荤喐鐟辩徊楣冩倵?JSON 闂佸搫鍟冲▔娑㈠吹椤撱垺鐓?', error);
 			}
-			ElMessage.success('妫板嫭绁撮幋鎰');
+			ElMessage.success('检测成功');
 		} else {
 			ElMessage.error(res.msg);
 		}
@@ -250,7 +250,7 @@ onMounted(() => {
 	gap: 24px;
 }
 
-/* 闁硅矇鍐ㄧ厬闂傚牄鍨哄?*/
+/* 闂佺鐭囬崘銊у幀闂傚倸鐗勯崹鍝勵熆?*/
 .control-panel {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
@@ -313,7 +313,7 @@ onMounted(() => {
 	height: 40px;
 }
 
-/* 闁告劕鎳庨鎰板礌?*/
+/* 闂佸憡鍔曢幊搴敊閹版澘绀?*/
 .content-area {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -322,7 +322,7 @@ onMounted(() => {
 	min-height: 0;
 }
 
-/* 濞戞挸锕ｇ槐鍫曞礌?*/
+/* 婵炴垶鎸搁敃锝囨閸洖绀?*/
 .upload-section {
 	display: flex;
 	flex-direction: column;
@@ -416,7 +416,7 @@ onMounted(() => {
 	}
 }
 
-/* 缂備焦鎸婚悘澶愬礌?*/
+/* 缂傚倷鐒﹂幐濠氭倶婢舵劕绀?*/
 .result-section {
 	display: flex;
 	flex-direction: column;
@@ -518,7 +518,7 @@ onMounted(() => {
 	margin: 8px 0;
 }
 
-/* 缂佸矁娅ｆ慨鎼佸箑?*/
+/* 缂備礁鐭佸▍锝嗘叏閹间礁绠?*/
 .empty-state {
 	display: flex;
 	flex-direction: column;
@@ -540,7 +540,7 @@ onMounted(() => {
 	}
 }
 
-/* 闁告繂绉寸花鎻掝嚕韫囨凹鍟庨悹?*/
+/* 闂佸憡绻傜粔瀵歌姳閹绘帩鍤曢煫鍥ㄥ嚬閸熷酣鎮?*/
 @media (max-width: 1024px) {
 	.control-panel {
 		grid-template-columns: 1fr 1fr;
@@ -572,4 +572,5 @@ onMounted(() => {
 	}
 }
 </style>
+
 

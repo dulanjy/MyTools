@@ -4,7 +4,8 @@ export class SocketService {
   private socket;
  
   constructor() {
-    this.socket = io('http://localhost:5000');
+    const socketBase = import.meta.env.VITE_FLASK_SOCKET_URL || import.meta.env.VITE_FLASK_BASE_URL || 'http://localhost:5000';
+    this.socket = io(socketBase);
   }
  
   on(event: string, callback: Function) {

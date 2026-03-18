@@ -1,18 +1,22 @@
 package com.example.Kcsj.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.Kcsj.common.Result;
 import com.example.Kcsj.entity.BehaviorRecord;
 import com.example.Kcsj.mapper.BehaviorMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 
 @RestController
+@ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
 @RequestMapping("/behavior")
 public class BehaviorController {
 
@@ -20,26 +24,19 @@ public class BehaviorController {
     private BehaviorMapper behaviorMapper;
 
     @GetMapping("/stats")
-    public Map<String, Object> getStats() {
-        List<BehaviorRecord> records = behaviorMapper.selectList(new QueryWrapper<BehaviorRecord>().orderByAsc("record_time"));
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", records);
-        return result;
+    public Result<List<BehaviorRecord>> getStats() {
+        List<BehaviorRecord> records = behaviorMapper.selectList(
+                new QueryWrapper<BehaviorRecord>().orderByAsc("record_time")
+        );
+        return Result.success(records);
     }
 
     @PostMapping("/save")
-    public Map<String, Object> saveRecord(@RequestBody BehaviorRecord record) {
+    public Result<Void> saveRecord(@RequestBody BehaviorRecord record) {
         if (record.getRecordTime() == null) {
             record.setRecordTime(new Date());
         }
         behaviorMapper.insert(record);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        return result;
+        return Result.success();
     }
 }

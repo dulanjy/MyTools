@@ -1,11 +1,11 @@
-import vue from '@vitejs/plugin-vue';
+﻿import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import { defineConfig, loadEnv, ConfigEnv } from 'vite';
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
 
-// 临时静音 Dart Sass legacy-js-api 弃用警告（仅开发态）
-// 更激进的静音方案：同时拦截 Vite logger、console.warn 以及 process.stderr.write
-// 说明：仅用于开发阶段；构建阶段仍保留原始输出，方便 CI 发现问题。
+// 涓存椂闈欓煶 Dart Sass legacy-js-api 寮冪敤璀﹀憡锛堜粎寮€鍙戞€侊級
+// 鏇存縺杩涚殑闈欓煶鏂规锛氬悓鏃舵嫤鎴?Vite logger銆乧onsole.warn 浠ュ強 process.stderr.write
+// 璇存槑锛氫粎鐢ㄤ簬寮€鍙戦樁娈碉紱鏋勫缓闃舵浠嶄繚鐣欏師濮嬭緭鍑猴紝鏂逛究 CI 鍙戠幇闂銆?
 function suppressLegacySassWarning() {
 	const KEYWORD = 'legacy-js-api';
 	return {
@@ -20,16 +20,16 @@ function suppressLegacySassWarning() {
 		},
 		configureServer() {
 			const origConsoleWarn = console.warn;
-			// 拦截 console.warn
+			// 鎷︽埅 console.warn
 			console.warn = (...args: any[]) => {
 				if (args.some(a => typeof a === 'string' && a.includes(KEYWORD))) return;
 				origConsoleWarn(...args);
 			};
-			// 拦截底层 stderr 写入（部分依赖直接写入 process.stderr）
+			// 鎷︽埅搴曞眰 stderr 鍐欏叆锛堥儴鍒嗕緷璧栫洿鎺ュ啓鍏?process.stderr锛?
 			const origStderrWrite = process.stderr.write.bind(process.stderr);
 			process.stderr.write = (chunk: any, encoding?: any, cb?: any) => {
 				if (typeof chunk === 'string' && chunk.includes(KEYWORD)) {
-					return true; // 吞掉该行
+					return true; // 鍚炴帀璇ヨ
 				}
 				return origStderrWrite(chunk, encoding as any, cb);
 			};
@@ -63,15 +63,13 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 			hmr: { overlay: false },
 			proxy: {
 				'/api': {
-					//设置拦截器  拦截器格式   斜杠+拦截器名字，名字可以自己定
-					target: 'http://localhost:9999/', //代理的目标地址
+					//璁剧疆鎷︽埅鍣? 鎷︽埅鍣ㄦ牸寮?  鏂滄潬+鎷︽埅鍣ㄥ悕瀛楋紝鍚嶅瓧鍙互鑷繁瀹?					target: env.VITE_SPRING_BASE_URL || 'http://localhost:9999/', //浠ｇ悊鐨勭洰鏍囧湴鍧€
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, ''),
 				},
 				'/flask': {
-					//设置拦截器  拦截器格式   斜杠+拦截器名字，名字可以自己定
-					target: 'http://localhost:5000/', //代理的目标地址
+					//璁剧疆鎷︽埅鍣? 鎷︽埅鍣ㄦ牸寮?  鏂滄潬+鎷︽埅鍣ㄥ悕瀛楋紝鍚嶅瓧鍙互鑷繁瀹?					target: env.VITE_FLASK_BASE_URL || 'http://localhost:5000/', //浠ｇ悊鐨勭洰鏍囧湴鍧€
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/flask/, ''),
@@ -105,3 +103,4 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 });
 
 export default viteConfig;
+

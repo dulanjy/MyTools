@@ -53,11 +53,11 @@ public class UserController {
         try {
             User userPwd = userMapper.selectByName(userParam.getUsername());
             if (userPwd == null) {
-                return Result.error("-1", "用户名不存在");
+                return Result.error(-1, "用户名不存在");
             }
 
             if (!Objects.equals(userParam.getPassword(), userPwd.getPassword())) {
-                return Result.error("-1", "密码错误");
+                return Result.error(-1, "密码错误");
             }
 
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -66,7 +66,7 @@ public class UserController {
             User res = userMapper.selectOne(queryWrapper);
             return Result.success(res);
         } catch (Exception e) {
-            return Result.error("-1", "登录失败，请检查数据库连接配置");
+            return Result.error(-1, "登录失败，请检查数据库连接配置");
         }
     }
 
@@ -75,7 +75,7 @@ public class UserController {
         try {
             User res = userMapper.selectOne(Wrappers.<User>lambdaQuery().eq(User::getUsername, user.getUsername()));
             if (res != null) {
-                return Result.error("-1", "用户名重复");
+                return Result.error(-1, "用户名重复");
             }
 
             User user1 = new User();
@@ -92,7 +92,7 @@ public class UserController {
             userMapper.insert(user1);
             return Result.success();
         } catch (Exception e) {
-            return Result.error("-1", "注册失败，请检查数据库连接配置");
+            return Result.error(-1, "注册失败，请检查数据库连接配置");
         }
     }
 

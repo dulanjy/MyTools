@@ -2,7 +2,7 @@ package com.example.Kcsj.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.Kcsj.common.Result;
-import com.example.Kcsj.mapper.ImgRecordsMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,18 +10,22 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.Resource;
-
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
 @RequestMapping("/flask")
 public class PredictionController {
-    @Resource
-    ImgRecordsMapper imgRecordsMapper;
+
+    @Value("${app.flask.base-url:http://127.0.0.1:5000}")
+    private String flaskBaseUrl;
+
+    @Value("${app.flask.predict-path:/predictImg}")
+    private String flaskPredictPath;
+
+    @Value("${app.flask.file-names-path:/file_names}")
+    private String flaskFileNamesPath;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // 定义接收的参数类
     public static class PredictRequest {
         private String startTime;
         private String weight;
@@ -82,41 +86,70 @@ public class PredictionController {
     @PostMapping("/predict")
     public Result<?> predict(@RequestBody PredictRequest request) {
         if (request == null || request.getInputImg() == null || request.getInputImg().isEmpty()) {
-            return Result.error("-1", "未提供图片链接");
-        } else if (request.getWeight() == null || request.getWeight().isEmpty()) {
-            return Result.error("-1", "未提供权重");
+            return Result.error(-1, "未提供图片链接");
+        }
+        if (request.getWeight() == null || request.getWeight().isEmpty()) {
+            return Result.error(-1, "未提供权重");
         }
 
         try {
-            // 创建请求体
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<PredictRequest> requestEntity = new HttpEntity<>(request, headers);
 
-            // 调用 Flask API
-            String response = restTemplate.postForObject("http://localhost:5000/predictImg", requestEntity, String.class);
-            System.out.println("Received response: " + response);
-            JSONObject responses = JSONObject.parseObject(response);
-            if(responses.get("status").equals(400)){
-                return Result.error("-1", "Error: " + responses.get("message"));
-            }else {
-                // Flask 已在其内部将识别记录上报到 Spring 的 imgRecords，避免重复插入。
-                // 这里仅返回 Flask 的响应给前端。
-                return Result.success(response);
+            String endpoint = normalize(flaskBaseUrl) + normalizePath(flaskPredictPath);
+            String response = restTemplate.postForObject(endpoint, requestEntity, String.class);
+            JSONObject body = JSONObject.parseObject(response);
+
+            Integer status = body.getInteger("status");
+            Integer code = body.getInteger("code");
+            String message = body.getString("message");
+            boolean ok = (status != null && status == 200) || (code != null && code == 0);
+
+            if (!ok) {
+                return Result.error(-1, message == null ? "Flask predict failed" : message);
             }
+
+            Object payload = body.get("data");
+            if (payload == null) {
+                payload = body;
+            }
+            String normalizedPayload = (payload instanceof String) ? (String) payload : JSONObject.toJSONString(payload);
+            return Result.success(normalizedPayload);
         } catch (Exception e) {
-            return Result.error("-1", "Error: " + e.getMessage());
+            return Result.error(-1, "Error: " + e.getMessage());
         }
     }
 
     @GetMapping("/file_names")
     public Result<?> getFileNames() {
         try {
-            // 调用 Flask API
-            String response = restTemplate.getForObject("http://127.0.0.1:5000/file_names", String.class);
-            return Result.success(response);
+            String endpoint = normalize(flaskBaseUrl) + normalizePath(flaskFileNamesPath);
+            String response = restTemplate.getForObject(endpoint, String.class);
+            JSONObject body = JSONObject.parseObject(response);
+
+            Object payload = body.get("data");
+            if (payload == null) {
+                payload = body;
+            }
+            String normalizedPayload = (payload instanceof String) ? (String) payload : JSONObject.toJSONString(payload);
+            return Result.success(normalizedPayload);
         } catch (Exception e) {
-            return Result.error("-1", "Error: " + e.getMessage());
+            return Result.error(-1, "Error: " + e.getMessage());
         }
+    }
+
+    private String normalize(String baseUrl) {
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            return "http://127.0.0.1:5000";
+        }
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
+    private String normalizePath(String path) {
+        if (path == null || path.isEmpty()) {
+            return "";
+        }
+        return path.startsWith("/") ? path : ("/" + path);
     }
 }
