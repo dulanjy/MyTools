@@ -103,7 +103,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: true,
 			// 水印文案
-			wartermarkText: 'STU - STUDENT BEHAVIOR DETECTION',
+			wartermarkText: 'STB',
 
 			/**
 			 * 其它设置

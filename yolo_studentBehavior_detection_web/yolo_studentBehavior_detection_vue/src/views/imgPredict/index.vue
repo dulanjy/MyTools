@@ -1,56 +1,51 @@
 <template>
 	<div class="system-predict-container layout-padding">
 		<div class="system-predict-padding layout-padding-auto layout-padding-view predict-view">
-			<!-- 控制面板 -->
 			<div class="control-panel">
 				<div class="control-group">
-					<label class="control-label">检测类型</label>
-					<el-select 
-						v-model="kind" 
-						placeholder="请选择检测类型" 
-						size="large" 
+					<label class="control-label">Detection Type</label>
+					<el-select
+						v-model="kind"
+						placeholder="Select detection type"
+						size="large"
 						@change="getData"
 						class="control-select"
 					>
-						<el-option v-for="item in state.kind_items" :key="item.value" :label="item.label"
-							:value="item.value" />
+						<el-option v-for="item in state.kind_items" :key="item.value" :label="item.label" :value="item.value" />
 					</el-select>
 				</div>
 				<div class="control-group">
-					<label class="control-label">模型选择</label>
-					<el-select 
-						v-model="weight" 
-						placeholder="请选择模型" 
-						size="large" 
+					<label class="control-label">Model</label>
+					<el-select
+						v-model="weight"
+						placeholder="Select model"
+						size="large"
 						@change="onWeightChange"
 						class="control-select"
 					>
-						<el-option v-for="item in state.weight_items" :key="item.value" :label="item.label"
-							:value="item.value" />
+						<el-option v-for="item in state.weight_items" :key="item.value" :label="item.label" :value="item.value" />
 					</el-select>
 				</div>
 				<div class="control-group">
-					<label class="control-label">置信度阈值</label>
+					<label class="control-label">Confidence Threshold</label>
 					<div class="slider-wrapper">
 						<el-slider v-model="conf" :format-tooltip="formatTooltip" class="control-slider" />
 						<span class="slider-value">{{ (conf / 100).toFixed(2) }}</span>
 					</div>
 				</div>
-			<el-button type="primary" @click="upData" :loading="isLoading" class="predict-button">
-				<span>🚀 开始预测</span>
-			</el-button>
+				<el-button type="primary" @click="upData" :loading="isLoading" class="predict-button">
+					<span>Run Detection</span>
+				</el-button>
 			</div>
 
-			<!-- 上传和结果区 -->
 			<div class="content-area">
-				<!-- 左侧上传区 -->
 				<div class="upload-section">
 					<el-card shadow="hover" class="upload-card">
-						<el-upload 
-							v-model="state.img" 
-							ref="uploadFile" 
+						<el-upload
+							v-model="state.img"
+							ref="uploadFile"
 							class="avatar-uploader"
-							action="http://localhost:9999/files/upload" 
+							action="http://localhost:9999/files/upload"
 							:show-file-list="false"
 							:on-success="handleAvatarSuccessone"
 						>
@@ -60,30 +55,29 @@
 									<el-icon class="upload-icon">
 										<Plus />
 									</el-icon>
-									<p class="upload-text">点击上传图片</p>
-									<p class="upload-hint">支持 JPG、PNG</p>
+									<p class="upload-text">Click to upload image</p>
+									<p class="upload-hint">Supports JPG / PNG</p>
 								</div>
 							</div>
 						</el-upload>
 					</el-card>
 				</div>
 
-				<!-- 右侧结果区 -->
 				<div class="result-section" v-if="state.predictionResult.label">
 					<el-card class="result-card" shadow="hover">
 						<template #header>
 							<div class="result-header">
-								<span>✨ 预测结果</span>
+								<span>Prediction Result</span>
 							</div>
 						</template>
 						<div class="result-content">
 							<div class="result-item">
-								<span class="result-label">识别结果</span>
+								<span class="result-label">Label</span>
 								<span class="result-value">{{ state.predictionResult.label }}</span>
 							</div>
 							<el-divider />
 							<div class="result-item">
-								<span class="result-label">预测概率</span>
+								<span class="result-label">Confidence</span>
 								<div class="confidence-bar">
 									<div class="confidence-fill" :style="{ width: parseFloat(state.predictionResult.confidence) + '%' }"></div>
 									<span class="confidence-text">{{ state.predictionResult.confidence }}</span>
@@ -91,24 +85,21 @@
 							</div>
 							<el-divider />
 							<div class="result-item">
-								<span class="result-label">处理耗时</span>
+								<span class="result-label">Elapsed Time</span>
 								<span class="result-value">{{ state.predictionResult.allTime }}</span>
 							</div>
 						</div>
 					</el-card>
 				</div>
 
-				<!-- 空状态 -->
 				<div class="empty-state" v-if="!state.predictionResult.label">
-					<div class="empty-icon">🖼️</div>
-					<p class="empty-text">上传图片进行预测</p>
+					<div class="empty-icon">-</div>
+					<p class="empty-text">Upload an image to start detection</p>
 				</div>
 			</div>
 		</div>
 	</div>
 </template>
-
-
 <script setup lang="ts" name="personal">
 import { reactive, ref, onMounted } from 'vue';
 import type { UploadInstance, UploadProps } from 'element-plus';
@@ -118,39 +109,19 @@ import { Plus } from '@element-plus/icons-vue';
 import { useUserInfo } from '/@/stores/userInfo';
 import { storeToRefs } from 'pinia';
 import { formatDate } from '/@/utils/formatTime';
+import { STUDENT_KIND_ITEMS, filterWeightsByKind, inferKindFromWeight } from '/@/utils/studentBehaviorModel';
 
 const imageUrl = ref('');
 const conf = ref('');
 const weight = ref('');
-const kind = ref('');
+const kind = ref('student');
 const uploadFile = ref<UploadInstance>();
 const isLoading = ref(false);
 const stores = useUserInfo();
 const { userInfos } = storeToRefs(stores);
 const state = reactive({
 	weight_items: [] as any,
-	kind_items: [
-		{
-			value: 'corn',
-			label: '玉米',
-		},
-		{
-			value: 'rice',
-			label: '水稻',
-		},
-		{
-			value: 'strawberry',
-			label: '草莓',
-		},
-		{
-			value: 'tomato',
-			label: '西红柿',
-		},
-		{
-			value: 'head',
-			label: '人数',
-		},
-	],
+	kind_items: STUDENT_KIND_ITEMS,
 	img: '',
 	predictionResult: {
 		label: '',
@@ -180,33 +151,17 @@ const getData = () => {
 	request.get('/api/flask/file_names').then((res) => {
 		if (res.code == 0) {
 			res.data = JSON.parse(res.data);
-			const name = String(kind.value || '').toLowerCase();
-			const keywordsByKind: Record<string, string[]> = {
-				corn: ['corn', 'maize'],
-				rice: ['rice', 'paddy'],
-				strawberry: ['strawberry'],
-				tomato: ['tomato'],
-				head: ['head', 'count', 'counts'],
-			};
-			let filtered: any[];
-			if (!name) {
-				filtered = res.data.weight_items;
-			} else {
-				const kws = keywordsByKind[name] || [name];
-				filtered = res.data.weight_items.filter((item: any) => {
-					const v = String(item.value || '').toLowerCase();
-					return kws.some(kw => v.includes(kw));
-				});
-			}
+			const allItems = Array.isArray(res.data?.weight_items) ? res.data.weight_items : [];
+			const filtered = filterWeightsByKind(allItems, kind.value);
 			state.weight_items = filtered;
-			// 自动选择第一个匹配的模型（当当前选择不在列表中时）
+			// 闁煎浜滄慨鈺呮焻婢跺顏ョ紒妤婂厸缁斿瓨绋夐鍕埍闂佹澘绉跺▓鎴澪熼垾宕団偓鐑芥晬閸繄绉肩憸鐗堟尭婢х娀鏌呮径瀣仴濞戞挸绉村﹢顏堝礆濡ゅ嫨鈧啯绋夐鐔割槯闁?
 			const current = String(weight.value || '').toLowerCase();
 			const exists = filtered.some((it: any) => String(it.value || '').toLowerCase() === current);
 			if (!exists) {
 				weight.value = filtered.length ? filtered[0].value : '';
 			}
-			// 若未选择检测类型，但已经有了模型选择，则根据模型名自动推断并填充 kind
-			if (!name) {
+			// 闁兼眹鍎插﹢顓㈡焻婢跺顏ユ俊顐熷亾婵炴潙顑囩悮顐﹀垂鐎ｅ墎绀夊ù锝呮閸戯紕绱掕箛鏃€绠掑ù婊冩鑶╅柛銊ヮ儔閳ь剙顦扮€氥劑鏁嶇仦钘夌仧闁哄秷顫夊畵浣肝熼垾宕団偓鐑藉触瀹ュ牆娈伴柛鏂诲妽鐢綊寮鐐跺珯濠靛鍋勯崢?kind
+			if (!kind.value) {
 				const wsel = String(weight.value || '');
 				if (wsel && !kind.value) {
 					const inferred2 = inferKindFromWeight(wsel);
@@ -219,25 +174,6 @@ const getData = () => {
 			ElMessage.error(res.msg);
 		}
 	});
-};
-
-const inferKindFromWeight = (w: string) => {
-	if (!w) return '';
-	const s = w.toLowerCase();
-	if (s.includes('tomato')) return 'tomato';
-	if (s.includes('strawberry')) return 'strawberry';
-	if (s.includes('corn') || s.includes('maize')) return 'corn';
-	if (s.includes('rice') || s.includes('paddy')) return 'rice';
-	if (s.includes('head') || s.includes('count')) return 'head';
-	return '';
-}
-
-const onWeightChange = () => {
-	const inferred = inferKindFromWeight(String(weight.value || ''));
-	if (inferred) {
-		kind.value = inferred;
-		// 注意：不要调用 getData()，否则会按 kind 过滤权重列表，可能把当前权重过滤掉
-	}
 };
 
 
@@ -255,35 +191,35 @@ const upData = () => {
 			try {
 				res.data = JSON.parse(res.data);
 
-				// 如果 res.data.label 是字符串，则解析为数组
+				// 濠碘€冲€归悘?res.data.label 闁哄嫷鍨伴悺褏绮敂鑳洬闁挎稑鑻崹顖滄喆閿濆棛鈧姤绋夐悜妯绘缂?
 				if (typeof res.data.label === 'string') {
 					res.data.label = JSON.parse(res.data.label);
 				}
 
-				// 确保 res.data.label 是数组后再调用 map
+				// 缁绢収鍠曠换?res.data.label 闁哄嫷鍨遍弳鐔虹磼閸曨偅鍊甸柛鎰Х閻ㄧ喖鎮?map
 				if (Array.isArray(res.data.label)) {
 					state.predictionResult.label = res.data.label.map(item => item.replace(/\\u([\dA-Fa-f]{4})/g, (_, code) =>
 						String.fromCharCode(parseInt(code, 16))
 					));
 				} else {
-					console.error("res.data.label 不是数组:", res.data.label);
+					console.error("res.data.label 濞戞挸绉靛Σ鎼佸极閹殿喚鐭?", res.data.label);
 				}
 				state.predictionResult.confidence = res.data.confidence;
 				state.predictionResult.allTime = res.data.allTime;
 
-				// 覆盖原图片
+				// 閻熸洖妫涘ú濠囧储閻旈攱绂堥柣?
 				if (res.data.outImg) {
-					// 使用服务器返回的新图片路径
+					// 濞达綀娉曢弫銈夊嫉瀹ュ懎顫ら柛锝冨姀缁绘垿宕堕悙鍨暠闁哄倹婢樺ù姗€鎮ч崶顏嗙唴鐎?
 					imageUrl.value = res.data.outImg;
 				} else {
-					// 否则保留原图片路径
+					// 闁告熬绠戦崹顖涚┍濠靛牊娈岄柛妯煎枎濞存﹢鎮ч崶顏嗙唴鐎?
 					imageUrl.value = imageUrl.value;
 				}
 				console.log(state.predictionResult);
 			} catch (error) {
-				console.error('解析 JSON 时出错:', error);
+				console.error('閻熸瑱绲鹃悗?JSON 闁哄啳娉涢崵顓㈡煥?', error);
 			}
-			ElMessage.success('预测成功！');
+			ElMessage.success('妫板嫭绁撮幋鎰');
 		} else {
 			ElMessage.error(res.msg);
 		}
@@ -314,7 +250,7 @@ onMounted(() => {
 	gap: 24px;
 }
 
-/* 控制面板 */
+/* 闁硅矇鍐ㄧ厬闂傚牄鍨哄?*/
 .control-panel {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
@@ -377,7 +313,7 @@ onMounted(() => {
 	height: 40px;
 }
 
-/* 内容区 */
+/* 闁告劕鎳庨鎰板礌?*/
 .content-area {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -386,7 +322,7 @@ onMounted(() => {
 	min-height: 0;
 }
 
-/* 上传区 */
+/* 濞戞挸锕ｇ槐鍫曞礌?*/
 .upload-section {
 	display: flex;
 	flex-direction: column;
@@ -480,7 +416,7 @@ onMounted(() => {
 	}
 }
 
-/* 结果区 */
+/* 缂備焦鎸婚悘澶愬礌?*/
 .result-section {
 	display: flex;
 	flex-direction: column;
@@ -582,7 +518,7 @@ onMounted(() => {
 	margin: 8px 0;
 }
 
-/* 空状态 */
+/* 缂佸矁娅ｆ慨鎼佸箑?*/
 .empty-state {
 	display: flex;
 	flex-direction: column;
@@ -604,7 +540,7 @@ onMounted(() => {
 	}
 }
 
-/* 响应式设计 */
+/* 闁告繂绉寸花鎻掝嚕韫囨凹鍟庨悹?*/
 @media (max-width: 1024px) {
 	.control-panel {
 		grid-template-columns: 1fr 1fr;
@@ -636,3 +572,4 @@ onMounted(() => {
 	}
 }
 </style>
+

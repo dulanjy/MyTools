@@ -53,11 +53,12 @@ import { storeToRefs } from 'pinia';
 import type { UploadInstance, UploadProps } from 'element-plus';
 import { SocketService } from '/@/utils/socket';
 import { formatDate } from '/@/utils/formatTime';
+import { STUDENT_KIND_ITEMS, filterWeightsByKind, inferKindFromWeight } from '/@/utils/studentBehaviorModel';
 
 const uploadFile = ref<UploadInstance>();
 const stores = useUserInfo();
 const conf = ref('');
-const kind = ref('');
+const kind = ref('student');
 const weight = ref('');
 const { userInfos } = storeToRefs(stores);
 
@@ -67,28 +68,7 @@ const handleAvatarSuccessone: UploadProps['onSuccess'] = (response, uploadFile) 
 };
 const state = reactive({
 	weight_items: [] as any,
-	kind_items: [
-		{
-			value: 'corn',
-			label: '玉米',
-		},
-		{
-			value: 'rice',
-			label: '水稻',
-		},
-		{
-			value: 'strawberry',
-			label: '草莓',
-		},
-		{
-			value: 'tomato',
-			label: '西红柿',
-		},
-		{
-			value: 'head',
-			label: '人数',
-		},
-	],
+	kind_items: STUDENT_KIND_ITEMS,
 	data: {} as any,
 	video_path: '',
 	type_text: "正在保存",
@@ -134,24 +114,8 @@ const getData = () => {
 	request.get('/api/flask/file_names').then((res) => {
 		if (res.code == 0) {
 			res.data = JSON.parse(res.data);
-			const name = String(kind.value || '').toLowerCase();
-			const keywordsByKind: Record<string, string[]> = {
-				corn: ['corn', 'maize'],
-				rice: ['rice', 'paddy'],
-				strawberry: ['strawberry'],
-				tomato: ['tomato'],
-				head: ['head', 'count', 'counts'],
-			};
-			let filtered: any[];
-			if (!name) {
-				filtered = res.data.weight_items;
-			} else {
-				const kws = keywordsByKind[name] || [name];
-				filtered = res.data.weight_items.filter((item: any) => {
-					const v = String(item.value || '').toLowerCase();
-					return kws.some(kw => v.includes(kw));
-				});
-			}
+			const allItems = Array.isArray(res.data?.weight_items) ? res.data.weight_items : [];
+			const filtered = filterWeightsByKind(allItems, kind.value);
 			state.weight_items = filtered;
 			const current = String(weight.value || '').toLowerCase();
 			const exists = filtered.some((it: any) => String(it.value || '').toLowerCase() === current);
@@ -159,9 +123,9 @@ const getData = () => {
 				weight.value = filtered.length ? filtered[0].value : '';
 			}
 			// 未选检测类型时，依据已选模型自动推断并填充 kind
-			if (!name) {
+			if (!kind.value) {
 				const wsel = String(weight.value || '');
-				if (wsel && !kind.value) {
+				if (wsel) {
 					const inferred2 = inferKindFromWeight(wsel);
 					if (inferred2) {
 						kind.value = inferred2;
@@ -173,17 +137,6 @@ const getData = () => {
 		}
 	});
 };
-
-const inferKindFromWeight = (w: string) => {
-	if (!w) return '';
-	const s = w.toLowerCase();
-	if (s.includes('tomato')) return 'tomato';
-	if (s.includes('strawberry')) return 'strawberry';
-	if (s.includes('corn') || s.includes('maize')) return 'corn';
-	if (s.includes('rice') || s.includes('paddy')) return 'rice';
-	if (s.includes('head') || s.includes('count')) return 'head';
-	return '';
-}
 
 const onWeightChange = () => {
 	const inferred = inferKindFromWeight(String(weight.value || ''));

@@ -7,7 +7,7 @@
 		<div class="login-box animate__animated animate__fadeIn">
 			<div class="title">
 				<h2>基于YOLOV11的智能检测系统</h2>
-				<p>YOLOV11-based Crop Disease and Pest Detection System</p>
+				<p>YOLOV11-based Student Behavior Detection System</p>
 			</div>
 
 			<el-form :model="ruleForm" :rules="registerRules" ref="ruleFormRef">

@@ -230,23 +230,10 @@ class VideoProcessingApp:
         try:
             if not weight:
                 return None
-            name = str(Path(weight).name).lower()
-            # 优先取下划线/连字符/点之前的前缀
-            for sep in ['_', '-', '.']:
-                if sep in name:
-                    name = name.split(sep)[0]
-                    break
-            # 常见别名归一
-            aliases = {
-                'maize': 'corn',
-                'paddy': 'rice',
-            }
-            base = aliases.get(name, name)
-            # 针对计数/头部检测模型的推断
             full = str(Path(weight).name).lower()
-            if any(tok in full for tok in ['head', 'count', 'counts']):
+            if any(tok in full for tok in ['head', 'count', 'counts', 'per_counts']):
                 return 'head'
-            return base
+            return 'student'
         except Exception:
             return None
 
