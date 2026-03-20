@@ -8,14 +8,28 @@
       "command": "powershell",
       "args": [
         "-NoProfile",
-        "-Command",
-        "$inUse = netstat -ano -p tcp | Select-String ':5000\\s'; if ($inUse) { Write-Host 'Port 5000 already in use, skip Flask start.'; exit 0 }; $conda = 'C:\\Users\\hp1\\anaconda3\\Scripts\\conda.exe'; if (!(Test-Path $conda)) { Write-Error \"conda.exe not found: $conda\"; exit 1 }; $envName = ''; if ($env:YOLO_CONDA_ENV) { $envName = $env:YOLO_CONDA_ENV } elseif (& $conda env list | Select-String '(^|\\s)yolo11_web(\\s|$)') { $envName = 'yolo11_web' } elseif (& $conda env list | Select-String '(^|\\s)yolo11(\\s|$)') { $envName = 'yolo11' } elseif (& $conda env list | Select-String '(^|\\s)yolov8(\\s|$)') { $envName = 'yolov8' }; if (-not $envName) { Write-Error 'No usable conda environment found. Set YOLO_CONDA_ENV first.'; exit 1 }; Write-Host \"Using conda env: $envName\"; & $conda run -n $envName python main.py"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev-services.ps1",
+        "-Service",
+        "Flask"
       ],
-      "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_flask"
-      },
       "isBackground": true,
-      "problemMatcher": []
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".+",
+            "endsPattern": ".*(Flask already running on 5000|Flask running on 5000|Running on\\s+http://[^\\s]*:5000).*"
+          }
+        }
+      ]
     },
     {
       "label": "Spring: Run (9999)",
@@ -23,14 +37,28 @@
       "command": "powershell",
       "args": [
         "-NoProfile",
-        "-Command",
-        "$inUse = netstat -ano -p tcp | Select-String ':9999\\s'; if ($inUse) { Write-Host 'Port 9999 already in use, skip Spring start.'; exit 0 }; .\\mvnw.cmd spring-boot:run -DskipTests"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev-services.ps1",
+        "-Service",
+        "Spring"
       ],
-      "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_springboot"
-      },
       "isBackground": true,
-      "problemMatcher": []
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".+",
+            "endsPattern": ".*(Spring already running on 9999|Tomcat initialized with port\\(s\\):\\s*9999|Tomcat started on port\\(s\\):\\s*9999|Started .* in .* seconds).*"
+          }
+        }
+      ]
     },
     {
       "label": "Vite: Dev (8888)",
@@ -38,17 +66,31 @@
       "command": "powershell",
       "args": [
         "-NoProfile",
-        "-Command",
-        "$inUse = netstat -ano -p tcp | Select-String ':8888\\s|:8889\\s'; if ($inUse) { Write-Host 'Port 8888/8889 already in use, skip Vite start.'; exit 0 }; npm run dev"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev-services.ps1",
+        "-Service",
+        "Vite"
       ],
-      "options": {
-        "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_vue"
-      },
       "isBackground": true,
-      "problemMatcher": []
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".+",
+            "endsPattern": ".*(Vite already running on 8888/8889|Local:\\s+http://[^\\s]*:8888/|Local:\\s+http://[^\\s]*:8889/).*"
+          }
+        }
+      ]
     },
     {
-      "label": "All: Dev (Flask+Spring+Vite)",
+      "label": "All: Up (Flask+Spring+Vite)",
       "type": "shell",
       "command": "cmd",
       "args": [
@@ -60,9 +102,68 @@
         "Spring: Run (9999)",
         "Vite: Dev (8888)"
       ],
-      "dependsOrder": "parallel",
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Health (warn)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev-services.ps1",
+        "-Service",
+        "Health"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "All: Dev (Flask+Spring+Vite)",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "echo startup + health check"
+      ],
+      "dependsOn": [
+        "All: Up (Flask+Spring+Vite)",
+        "Dev: Health (warn)"
+      ],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Stop (5000/9999/8888/8889)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev-services.ps1",
+        "-Service",
+        "Stop"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "All: Restart (Flask+Spring+Vite)",
+      "dependsOn": [
+        "Dev: Stop (5000/9999/8888/8889)",
+        "All: Dev (Flask+Spring+Vite)"
+      ],
+      "dependsOrder": "sequence",
       "problemMatcher": []
     }
   ]
 }
+
 
