@@ -11,7 +11,7 @@
 - Windows + PowerShell
 - Node.js 16+（当前项目在 Node 22 也可运行）
 - Java（建议 17 或 21）
-- Python + Conda（推荐环境名：`yolo11`）
+- Python + Conda（推荐环境名：`yolo11_web`）
 - MySQL（用于 `student_behavior`）
 
 可选：解决 PowerShell 中文乱码
@@ -42,7 +42,7 @@ Spring 默认连接配置在：
 
 ```powershell
 cd g:\MyCode\MyTools\yolo_studentBehavior_detection_web\yolo_studentBehavior_detection_flask
-C:\Users\hp1\anaconda3\Scripts\conda.exe run -n yolo11 python main.py
+C:\Users\hp1\anaconda3\Scripts\conda.exe run -n yolo11_web python main.py
 ```
 
 说明：推荐 `conda run`，比 `conda activate` 更稳定，且不依赖 shell profile。
@@ -155,7 +155,7 @@ Invoke-RestMethod -Method Post -Uri 'http://localhost:8888/api/user/register' -C
 优先改用：
 
 ```powershell
-C:\Users\hp1\anaconda3\Scripts\conda.exe run -n yolo11 python main.py
+C:\Users\hp1\anaconda3\Scripts\conda.exe run -n yolo11_web python main.py
 ```
 
 ## 7. 数据库索引优化（可选）

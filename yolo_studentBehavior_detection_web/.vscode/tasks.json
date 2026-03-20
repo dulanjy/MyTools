@@ -9,7 +9,7 @@
       "args": [
         "-NoProfile",
         "-Command",
-        "$inUse = netstat -ano -p tcp | Select-String ':5000\\s'; if ($inUse) { Write-Host 'Port 5000 already in use, skip Flask start.'; exit 0 }; $conda = 'C:\\Users\\hp1\\anaconda3\\Scripts\\conda.exe'; if (!(Test-Path $conda)) { Write-Error \"conda.exe not found: $conda\"; exit 1 }; $envName = if ($env:YOLO_CONDA_ENV) { $env:YOLO_CONDA_ENV } else { 'yolo11' }; & $conda run -n $envName python main.py"
+        "$inUse = netstat -ano -p tcp | Select-String ':5000\\s'; if ($inUse) { Write-Host 'Port 5000 already in use, skip Flask start.'; exit 0 }; $conda = 'C:\\Users\\hp1\\anaconda3\\Scripts\\conda.exe'; if (!(Test-Path $conda)) { Write-Error \"conda.exe not found: $conda\"; exit 1 }; $envName = ''; if ($env:YOLO_CONDA_ENV) { $envName = $env:YOLO_CONDA_ENV } elseif (& $conda env list | Select-String '(^|\\s)yolo11_web(\\s|$)') { $envName = 'yolo11_web' } elseif (& $conda env list | Select-String '(^|\\s)yolo11(\\s|$)') { $envName = 'yolo11' } elseif (& $conda env list | Select-String '(^|\\s)yolov8(\\s|$)') { $envName = 'yolov8' }; if (-not $envName) { Write-Error 'No usable conda environment found. Set YOLO_CONDA_ENV first.'; exit 1 }; Write-Host \"Using conda env: $envName\"; & $conda run -n $envName python main.py"
       ],
       "options": {
         "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_flask"
