@@ -68,7 +68,7 @@ public class UserController {
         return Result.success(userMapper.selectList(null));
     }
 
-    @PostMapping("/login")
+    @PostMapping({"/login", "/signIn"})
     public Result<?> login(@RequestBody User userParam) {
         try {
             if (userParam == null || StrUtil.isBlank(userParam.getUsername()) || StrUtil.isBlank(userParam.getPassword())) {
@@ -93,6 +93,12 @@ public class UserController {
         } catch (Exception e) {
             return Result.error(-1, "login failed: " + e.getMessage());
         }
+    }
+
+    @PostMapping({"/logout", "/signOut"})
+    public Result<?> logout() {
+        // Stateless token auth: sign-out is handled client-side by removing token.
+        return Result.success();
     }
 
     @PostMapping("/register")

@@ -5,10 +5,11 @@
     {
       "label": "Flask: Serve (5000)",
       "type": "shell",
-      "command": "cmd",
+      "command": "powershell",
       "args": [
-        "/c",
-        "C:\\Users\\hp1\\anaconda3\\Scripts\\activate && conda activate yolov8 && python main.py"
+        "-NoProfile",
+        "-Command",
+        "$inUse = netstat -ano -p tcp | Select-String ':5000\\s'; if ($inUse) { Write-Host 'Port 5000 already in use, skip Flask start.'; exit 0 }; $conda = 'C:\\Users\\hp1\\anaconda3\\Scripts\\conda.exe'; if (!(Test-Path $conda)) { Write-Error \"conda.exe not found: $conda\"; exit 1 }; $envName = if ($env:YOLO_CONDA_ENV) { $env:YOLO_CONDA_ENV } else { 'yolo11' }; & $conda run -n $envName python main.py"
       ],
       "options": {
         "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_flask"
@@ -19,10 +20,11 @@
     {
       "label": "Spring: Run (9999)",
       "type": "shell",
-      "command": "cmd",
+      "command": "powershell",
       "args": [
-        "/c",
-        ".\\mvnw.cmd spring-boot:run -DskipTests"
+        "-NoProfile",
+        "-Command",
+        "$inUse = netstat -ano -p tcp | Select-String ':9999\\s'; if ($inUse) { Write-Host 'Port 9999 already in use, skip Spring start.'; exit 0 }; .\\mvnw.cmd spring-boot:run -DskipTests"
       ],
       "options": {
         "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_springboot"
@@ -33,10 +35,11 @@
     {
       "label": "Vite: Dev (8888)",
       "type": "shell",
-      "command": "npm",
+      "command": "powershell",
       "args": [
-        "run",
-        "dev"
+        "-NoProfile",
+        "-Command",
+        "$inUse = netstat -ano -p tcp | Select-String ':8888\\s|:8889\\s'; if ($inUse) { Write-Host 'Port 8888/8889 already in use, skip Vite start.'; exit 0 }; npm run dev"
       ],
       "options": {
         "cwd": "g:/MyCode/MyTools/yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_vue"
@@ -57,7 +60,7 @@
         "Spring: Run (9999)",
         "Vite: Dev (8888)"
       ],
-      "dependsOrder": "sequence",
+      "dependsOrder": "parallel",
       "problemMatcher": []
     }
   ]

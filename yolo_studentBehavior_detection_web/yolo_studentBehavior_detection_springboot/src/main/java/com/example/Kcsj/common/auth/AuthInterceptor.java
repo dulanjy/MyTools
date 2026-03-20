@@ -50,6 +50,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
         return uri.startsWith("/user/login")
+                || uri.startsWith("/user/signIn")
                 || uri.startsWith("/user/register")
                 || uri.startsWith("/files/")
                 || uri.equals("/error");
