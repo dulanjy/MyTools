@@ -34,6 +34,7 @@ class VideoProcessingApp(CommonHandlersMixin, DetectionHandlersMixin, StreamHand
         self.host = host or self.config.flask_host
         self.port = port or self.config.flask_port
         self.data: Dict[str, Any] = {}
+        self.camera_flags: Dict[str, bool] = {}
 
         video_dir = Path(self.config.runs_dir) / "video"
         video_dir.mkdir(parents=True, exist_ok=True)
@@ -111,11 +112,17 @@ class VideoProcessingApp(CommonHandlersMixin, DetectionHandlersMixin, StreamHand
         success = status_code < 400
         code = 0 if success else 1
         message = "success" if success else "error"
+        data: Any = payload
 
         if isinstance(payload, dict):
             payload_msg = payload.get("message") or payload.get("msg")
             if isinstance(payload_msg, str) and payload_msg.strip():
                 message = payload_msg
+
+            # For Flask-native payloads like {"status":200,"data":"..."},
+            # keep top-level data as the actual business payload.
+            if "status" in payload and "data" in payload:
+                data = payload.get("data")
 
             payload_code = payload.get("code")
             if payload_code is not None:
@@ -148,7 +155,7 @@ class VideoProcessingApp(CommonHandlersMixin, DetectionHandlersMixin, StreamHand
             "code": code,
             "message": message,
             "msg": message,
-            "data": payload,
+            "data": data,
             "traceId": trace_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }

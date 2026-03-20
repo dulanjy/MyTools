@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -22,19 +23,16 @@ class StreamHandlersMixin:
         if not input_video:
             return jsonify({"status": 400, "message": "inputVideo is required"}), 400
 
-        self.data.clear()
-        self.data.update(
-            {
-                "username": request.args.get("username"),
-                "weight": request.args.get("weight"),
-                "conf": request.args.get("conf"),
-                "startTime": request.args.get("startTime"),
-                "inputVideo": input_video,
-                "kind": request.args.get("kind") or self._infer_kind(request.args.get("weight")) or "student",
-            }
-        )
+        data = {
+            "username": request.args.get("username"),
+            "weight": request.args.get("weight"),
+            "conf": request.args.get("conf"),
+            "startTime": request.args.get("startTime"),
+            "inputVideo": input_video,
+            "kind": request.args.get("kind") or self._infer_kind(request.args.get("weight")) or "student",
+        }
 
-        self.download(self.data["inputVideo"], self.paths["download"])
+        self.download(data["inputVideo"], self.paths["download"])
         cap = cv2.VideoCapture(self.paths["download"])
         if not cap.isOpened():
             return jsonify({"status": 400, "message": "cannot open input video"}), 400
@@ -47,8 +45,8 @@ class StreamHandlersMixin:
             (640, 480),
         )
         model = None
-        if YOLO is not None and self.data.get("weight"):
-            model = YOLO(self._resolve_weight_path(self.data["weight"]))
+        if YOLO is not None and data.get("weight"):
+            model = YOLO(self._resolve_weight_path(data["weight"]))
 
         def generate():
             try:
@@ -58,7 +56,7 @@ class StreamHandlersMixin:
                         break
                     frame = cv2.resize(frame, (640, 480))
                     if model is not None:
-                        results = model.predict(source=frame, conf=float(self.data.get("conf") or 0.25), show=False)
+                        results = model.predict(source=frame, conf=float(data.get("conf") or 0.25), show=False)
                         processed = results[0].plot()
                     else:
                         processed = frame
@@ -73,42 +71,43 @@ class StreamHandlersMixin:
                 for progress in self.convert_avi_to_mp4(self.paths["video_output"]):
                     self.socketio.emit("progress", {"data": progress})
                 uploaded = self.upload(self.paths["output"])
-                self.data["outVideo"] = uploaded
-                self._post_video_record(self.data, self.config.spring_videorecords_path, "/api/videoRecords")
+                data["outVideo"] = uploaded
+                self._post_video_record(data, self.config.spring_videorecords_path, "/api/videoRecords")
                 self.cleanup_files([self.paths["download"], self.paths["output"], self.paths["video_output"]])
 
         return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
     def predictCamera(self):
-        self.data.clear()
-        self.data.update(
-            {
-                "username": request.args.get("username"),
-                "weight": request.args.get("weight"),
-                "conf": request.args.get("conf"),
-                "startTime": request.args.get("startTime"),
-                "kind": request.args.get("kind") or self._infer_kind(request.args.get("weight")) or "student",
-            }
-        )
+        if not hasattr(self, "camera_flags"):
+            self.camera_flags = {}
+
+        session_id = request.args.get("sessionId") or uuid.uuid4().hex
+        data = {
+            "username": request.args.get("username"),
+            "weight": request.args.get("weight"),
+            "conf": request.args.get("conf"),
+            "startTime": request.args.get("startTime"),
+            "kind": request.args.get("kind") or self._infer_kind(request.args.get("weight")) or "student",
+        }
+        self.camera_flags[session_id] = True
 
         model = None
-        if YOLO is not None and self.data.get("weight"):
-            model = YOLO(self._resolve_weight_path(self.data["weight"]))
+        if YOLO is not None and data.get("weight"):
+            model = YOLO(self._resolve_weight_path(data["weight"]))
 
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         video_writer = cv2.VideoWriter(self.paths["camera_output"], cv2.VideoWriter_fourcc(*"XVID"), 20, (640, 480))
-        self.recording = True
 
         def generate():
             try:
-                while self.recording:
+                while self.camera_flags.get(session_id, False):
                     ret, frame = cap.read()
                     if not ret:
                         break
                     if model is not None:
-                        results = model.predict(source=frame, imgsz=640, conf=float(self.data.get("conf") or 0.25), show=False)
+                        results = model.predict(source=frame, imgsz=640, conf=float(data.get("conf") or 0.25), show=False)
                         processed = results[0].plot()
                     else:
                         processed = frame
@@ -118,20 +117,33 @@ class StreamHandlersMixin:
                         continue
                     yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n"
             finally:
+                self.camera_flags.pop(session_id, None)
                 self.cleanup_resources(cap, video_writer)
                 self.socketio.emit("message", {"data": "处理完成，正在保存"})
                 for progress in self.convert_avi_to_mp4(self.paths["camera_output"]):
                     self.socketio.emit("progress", {"data": progress})
                 uploaded = self.upload(self.paths["output"])
-                self.data["outVideo"] = uploaded
-                self._post_video_record(self.data, self.config.spring_camerarecords_path, "/api/cameraRecords")
+                data["outVideo"] = uploaded
+                self._post_video_record(data, self.config.spring_camerarecords_path, "/api/cameraRecords")
                 self.cleanup_files([self.paths["download"], self.paths["output"], self.paths["camera_output"]])
 
-        return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+        resp = Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+        resp.headers["X-Camera-Session"] = session_id
+        return resp
 
     def stopCamera(self):
-        self.recording = False
-        return jsonify({"status": 200, "message": "success"})
+        if not hasattr(self, "camera_flags"):
+            self.camera_flags = {}
+
+        session_id = request.args.get("sessionId")
+        if session_id:
+            existed = session_id in self.camera_flags
+            self.camera_flags[session_id] = False
+            return jsonify({"status": 200, "message": "success", "stopped": bool(existed), "sessionId": session_id})
+
+        for sid in list(self.camera_flags.keys()):
+            self.camera_flags[sid] = False
+        return jsonify({"status": 200, "message": "success", "stoppedAll": True})
 
     def _post_video_record(self, payload: Dict[str, Any], primary_path: str, fallback_path: str) -> Optional[int]:
         base = self.config.spring_base_url.rstrip("/")

@@ -136,12 +136,36 @@ class DetectionHandlersMixin:
 
     def predict_legacy(self):
         try:
-            resp = self.predictImg()
+            raw = self.predictImg()
+            resp = raw
+            http_status = 200
+            if isinstance(raw, tuple):
+                resp = raw[0]
+                if len(raw) > 1 and isinstance(raw[1], int):
+                    http_status = raw[1]
+            elif hasattr(raw, "status_code"):
+                http_status = int(getattr(raw, "status_code"))
+
+            if hasattr(resp, "status_code"):
+                try:
+                    http_status = int(getattr(resp, "status_code"))
+                except Exception:
+                    pass
+
             body = resp.get_json(silent=True) if hasattr(resp, "get_json") else None
             if body is None:
-                return jsonify({"code": 500, "msg": "empty response"}), 500
-            code = 0 if int(body.get("status", 200)) == 200 else 500
-            return jsonify({"code": code, "msg": body.get("message", "success"), "data": json.dumps(body, ensure_ascii=False)})
+                return jsonify({"code": 500, "msg": "empty response"}), max(http_status, 500)
+
+            payload_status = self._safe_int(body.get("status"))
+            payload_code = self._safe_int(body.get("code"))
+            ok = (payload_status is None or payload_status < 400) and (payload_code is None or payload_code == 0)
+            legacy_code = 0 if ok else 500
+            legacy_msg = body.get("message") or body.get("msg") or ("success" if ok else "error")
+            legacy_data = body.get("data", body)
+            legacy = {"code": legacy_code, "msg": legacy_msg, "data": json.dumps(legacy_data, ensure_ascii=False)}
+            if ok:
+                return jsonify(legacy)
+            return jsonify(legacy), (payload_status or http_status or 400)
         except Exception as e:
             return jsonify({"code": 500, "msg": str(e)}), 500
 
