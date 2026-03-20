@@ -56,8 +56,8 @@
 			>
 			</el-pagination>
 			<div class="table-footer-tool">
-				<SvgIcon name="iconfont icon-yunxiazai_o" :size="22" title="导出" @click="onImportTable" />
-				<SvgIcon name="iconfont icon-shuaxin" :size="22" title="刷新" @click="onRefreshTable" />
+				<SvgIcon name="ele-Download" :size="22" title="导出" @click="onImportTable" />
+				<SvgIcon name="ele-Refresh" :size="22" title="刷新" @click="onRefreshTable" />
 				<el-popover
 					placement="top-end"
 					trigger="click"
@@ -68,12 +68,12 @@
 					@show="onSetTable"
 				>
 					<template #reference>
-						<SvgIcon name="iconfont icon-quanjushezhi_o" :size="22" title="设置" />
+						<SvgIcon name="ele-Setting" :size="22" title="设置" />
 					</template>
 					<template #default>
 						<div class="tool-box">
 							<el-tooltip content="拖动进行排序" placement="top-start">
-								<SvgIcon name="fa fa-question-circle-o" :size="17" class="ml11" color="#909399" />
+								<SvgIcon name="ele-QuestionFilled" :size="17" class="ml11" color="#909399" />
 							</el-tooltip>
 							<el-checkbox
 								v-model="state.checkListAll"
@@ -88,7 +88,7 @@
 						<el-scrollbar>
 							<div ref="toolSetRef" class="tool-sortable">
 								<div class="tool-sortable-item" v-for="v in header" :key="v.key" :data-key="v.key">
-									<i class="fa fa-arrows-alt handle cursor-pointer"></i>
+									<SvgIcon name="ele-Rank" :size="15" class="handle cursor-pointer" color="#909399" />
 									<el-checkbox v-model="v.isCheck" size="default" class="ml12 mr8" :label="v.title" @change="onCheckChange" />
 								</div>
 							</div>

@@ -196,6 +196,7 @@ watch(
 	width: 70px;
 	height: 100%;
 	background: var(--next-bg-columnsMenuBar);
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 	ul {
 		position: relative;
 		.layout-columns-active {
@@ -217,11 +218,17 @@ watch(
 			cursor: pointer;
 			position: relative;
 			z-index: 1;
+			font-size: 13px;
+			font-weight: 500;
+			letter-spacing: 0.2px;
 			&:hover {
 				@extend .layout-columns-hover;
 			}
 			.columns-vertical {
 				margin: auto;
+				.svg-icon {
+					font-size: 16px;
+				}
 				.columns-vertical-title {
 					padding-top: 1px;
 				}
@@ -232,8 +239,9 @@ watch(
 				width: 100%;
 				align-items: center;
 				padding: 0 5px;
-				i {
+				.svg-icon {
 					margin-right: 3px;
+					font-size: 16px;
 				}
 				a {
 					display: flex;
@@ -245,6 +253,7 @@ watch(
 			a {
 				text-decoration: none;
 				color: var(--next-bg-columnsMenuBarColor);
+				font-family: inherit;
 			}
 		}
 		.columns-round {

@@ -63,13 +63,15 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 			hmr: { overlay: false },
 			proxy: {
 				'/api': {
-					//璁剧疆鎷︽埅鍣? 鎷︽埅鍣ㄦ牸寮?  鏂滄潬+鎷︽埅鍣ㄥ悕瀛楋紝鍚嶅瓧鍙互鑷繁瀹?					target: env.VITE_SPRING_BASE_URL || 'http://localhost:9999/', //浠ｇ悊鐨勭洰鏍囧湴鍧€
+					// Proxy API requests to Spring Boot backend.
+					target: env.VITE_SPRING_BASE_URL || 'http://localhost:9999/',
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, ''),
 				},
 				'/flask': {
-					//璁剧疆鎷︽埅鍣? 鎷︽埅鍣ㄦ牸寮?  鏂滄潬+鎷︽埅鍣ㄥ悕瀛楋紝鍚嶅瓧鍙互鑷繁瀹?					target: env.VITE_FLASK_BASE_URL || 'http://localhost:5000/', //浠ｇ悊鐨勭洰鏍囧湴鍧€
+					// Proxy Flask requests to Python backend.
+					target: env.VITE_FLASK_BASE_URL || 'http://localhost:5000/',
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/flask/, ''),

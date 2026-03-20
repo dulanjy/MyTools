@@ -84,6 +84,16 @@
 .el-sub-menu__title {
 	color: var(--next-bg-menuBarColor);
 }
+// 侧边栏菜单字体统一
+.layout-aside .el-menu-item,
+.layout-aside .el-sub-menu__title,
+.layout-columns-aside .el-menu-item,
+.layout-columns-aside .el-sub-menu__title {
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+	font-size: 14px;
+	font-weight: 500;
+	letter-spacing: 0.2px;
+}
 // 修复点击左侧菜单折叠再展开时，宽度不跟随问题
 .el-menu--collapse {
 	width: 64px !important;
@@ -102,6 +112,14 @@
 .el-menu-item .fa,
 .el-sub-menu .fa {
 	@include mix.generalIcon;
+}
+// Element Plus 图标在菜单中的尺寸/间距统一
+.layout-aside .el-menu-item .el-icon,
+.layout-aside .el-sub-menu__title .el-icon,
+.layout-columns-aside .el-menu-item .el-icon,
+.layout-columns-aside .el-sub-menu__title .el-icon {
+	@include mix.generalIcon;
+	margin-right: 6px;
 }
 // 水平菜单、横向菜单高亮 背景色，鼠标 hover 时，有子级菜单的背景色
 .el-menu-item.is-active,

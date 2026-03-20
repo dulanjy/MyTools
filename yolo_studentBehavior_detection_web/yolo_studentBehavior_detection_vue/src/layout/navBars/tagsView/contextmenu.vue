@@ -60,7 +60,7 @@ const state = reactive({
 			contextMenuClickId: 4,
 			txt: 'message.tagsView.fullscreen',
 			affix: false,
-			icon: 'iconfont icon-fullscreen',
+			icon: 'ele-FullScreen',
 		},
 	],
 	item: {},
@@ -128,10 +128,11 @@ defineExpose({
 	z-index: 2190;
 	position: fixed;
 	.el-dropdown-menu__item {
-		font-size: 12px !important;
+		font-size: 13px !important;
+		font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 		white-space: nowrap;
 		i {
-			font-size: 12px !important;
+			font-size: 13px !important;
 		}
 	}
 }

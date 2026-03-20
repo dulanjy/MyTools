@@ -17,7 +17,7 @@
 						}
 					"
 				>
-					<i class="iconfont icon-webicon318 layout-navbars-tagsview-ul-li-iconfont" v-if="isActive(v)"></i>
+					<SvgIcon name="ele-SuccessFilled" class="layout-navbars-tagsview-ul-li-iconfont" v-if="isActive(v)" />
 					<SvgIcon :name="v.meta.icon" v-if="!isActive(v) && getThemeConfig.isTagsviewIcon" class="pr5" />
 					<span>{{ setTagsViewNameI18n(v) }}</span>
 					<template v-if="isActive(v)">
@@ -606,7 +606,9 @@ watch(
 		display: flex;
 		align-items: center;
 		color: var(--el-text-color-regular);
-		font-size: 12px;
+		font-size: 13px;
+		font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+		font-weight: 500;
 		white-space: nowrap;
 		padding: 0 15px;
 		&-li {
@@ -628,9 +630,10 @@ watch(
 				border-color: var(--el-color-primary-light-5);
 			}
 			&-iconfont {
-				position: relative;
-				left: -5px;
-				font-size: 12px;
+				margin-right: 4px;
+				font-size: 13px;
+				display: inline-flex;
+				align-items: center;
 			}
 			&-icon {
 				border-radius: 100%;

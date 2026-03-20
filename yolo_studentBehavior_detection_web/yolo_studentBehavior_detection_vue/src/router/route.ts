@@ -59,7 +59,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-ziyuanxhdpi',
+					icon: 'ele-UserFilled',
 				},
 			},
 			{
@@ -74,7 +74,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shujukeshihua',
+					icon: 'ele-DataAnalysis',
 				},
 			},
 			{
@@ -89,7 +89,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-tupian',
+					icon: 'ele-Picture',
 				},
 			},
 			{
@@ -104,7 +104,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shipin1',
+					icon: 'ele-VideoCamera',
 				},
 			},
 			{
@@ -119,7 +119,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shexiangtou1',
+					icon: 'ele-Camera',
 				},
 			},
 			{
@@ -134,7 +134,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-tupianjilu',
+					icon: 'ele-PictureFilled',
 				},
 			},
 			{
@@ -149,7 +149,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				 isAffix: false,
 				 isIframe: false,
 				 roles: ['admin', 'common', 'others'],
-				 icon: 'iconfont icon-shipinjilu',
+				 icon: 'ele-VideoPlay',
 				},
 			},
 			{
@@ -164,7 +164,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-NVR',
+					icon: 'ele-Monitor',
 				},
 			},
 			{
@@ -179,7 +179,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin'],
-					icon: 'iconfont icon-yonghuguanli',
+					icon: 'ele-User',
 				},
 			},
 			{
@@ -194,7 +194,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-gerenzhongxin',
+					icon: 'ele-Avatar',
 				},
 			}
 		],

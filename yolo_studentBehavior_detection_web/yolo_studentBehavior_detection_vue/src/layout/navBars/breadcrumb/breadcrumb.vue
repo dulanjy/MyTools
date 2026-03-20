@@ -111,6 +111,7 @@ onBeforeRouteUpdate((to) => {
 	height: inherit;
 	display: flex;
 	align-items: center;
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 	.layout-navbars-breadcrumb-icon {
 		cursor: pointer;
 		font-size: 18px;
@@ -129,7 +130,9 @@ onBeforeRouteUpdate((to) => {
 	}
 	.layout-navbars-breadcrumb-iconfont {
 		font-size: 14px;
-		margin-right: 5px;
+		margin-right: 6px;
+		display: inline-flex;
+		align-items: center;
 	}
 	:deep(.el-breadcrumb__separator) {
 		opacity: 0.7;

@@ -2,7 +2,7 @@
 	<div class="layout-navbars-breadcrumb-user pr15" :style="{ flex: layoutUserFlexNum }">
 		<el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onComponentSizeChange" class="custom-dropdown">
 			<div class="layout-navbars-breadcrumb-user-icon">
-				<i class="iconfont icon-ziti" :title="$t('message.user.title0')"></i>
+				<SvgIcon name="ele-Operation" :size="16" :title="$t('message.user.title0')" />
 			</div>
 			<template #dropdown>
 				<el-dropdown-menu>
@@ -18,7 +18,7 @@
 			</el-icon>
 		</div>
 		<div class="layout-navbars-breadcrumb-user-icon" @click="onLayoutSetingClick">
-			<i class="icon-skin iconfont" :title="$t('message.user.title3')"></i>
+			<SvgIcon name="ele-SetUp" :size="16" :title="$t('message.user.title3')" />
 		</div>
 		<!-- <div class="layout-navbars-breadcrumb-user-icon">
 			<el-popover placement="bottom" trigger="click" transition="el-zoom-in-top" :width="300" :persistent="false">
@@ -35,11 +35,11 @@
 			</el-popover>
 		</div> -->
 		<div class="layout-navbars-breadcrumb-user-icon mr10" @click="onScreenfullClick">
-			<i
-				class="iconfont"
+			<SvgIcon
+				:name="!state.isScreenfull ? 'ele-FullScreen' : 'ele-ScaleToOriginal'"
+				:size="16"
 				:title="state.isScreenfull ? $t('message.user.title6') : $t('message.user.title5')"
-				:class="!state.isScreenfull ? 'icon-fullscreen' : 'icon-tuichuquanping'"
-			></i>
+			/>
 		</div>
 		<el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick" class="custom-dropdown">
 			<span class="layout-navbars-breadcrumb-user-link">
@@ -225,11 +225,14 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 	&-link {
 		height: 100%;
 		display: flex;
 		align-items: center;
 		white-space: nowrap;
+		font-size: 14px;
+		font-weight: 500;
 		&-photo {
 			width: 40px;
 			height: 40px;
@@ -240,19 +243,17 @@ onMounted(() => {
 	&-icon {
 		padding: 0 10px;
 		cursor: pointer;
-		color: #000000 !important;
+		color: var(--next-bg-topBarColor);
 		height: 50px;
 		line-height: 50px;
 		display: flex;
 		align-items: center;
 		&:hover {
-			background: #f0f0f0 !important;
-			i {
-				display: inline-block;
-			}
+			background: var(--next-color-user-hover);
 		}
-		i {
+		:deep(.el-icon) {
 			font-size: 16px;
+			display: inline-flex;
 		}
 	}
 	:deep(.el-dropdown) {

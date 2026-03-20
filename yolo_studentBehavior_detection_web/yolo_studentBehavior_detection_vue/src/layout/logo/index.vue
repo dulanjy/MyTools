@@ -40,6 +40,9 @@ const onThemeConfigChange = () => {
 	box-shadow: rgb(0 21 41 / 2%) 0px 1px 4px;
 	color: var(--el-color-primary);
 	font-size: 16px;
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+	font-weight: 600;
+	letter-spacing: 0.2px;
 	cursor: pointer;
 	animation: logoAnimation 0.3s ease-in-out;
 	span {

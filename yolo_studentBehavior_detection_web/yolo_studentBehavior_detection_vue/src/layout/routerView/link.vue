@@ -2,10 +2,10 @@
 	<div class="layout-padding layout-link-container">
 		<div class="layout-padding-auto layout-padding-view">
 			<div class="layout-link-warp">
-				<i class="layout-link-icon iconfont icon-xingqiu"></i>
+				<SvgIcon name="ele-Connection" class="layout-link-icon" />
 				<div class="layout-link-msg">页面 "{{ $t(state.title) }}" 已在新窗口中打开</div>
-				<el-button class="mt30" round size="default" @click="onGotoFullPage">
-					<i class="iconfont icon-lianjie"></i>
+				<el-button class="mt30 layout-link-open-btn" round size="default" @click="onGotoFullPage">
+					<SvgIcon name="ele-Link" class="layout-link-btn-icon" />
 					<span>立即前往体验</span>
 				</el-button>
 			</div>
@@ -46,13 +46,14 @@ watch(
 
 <style scoped lang="scss">
 .layout-link-container {
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 	.layout-link-warp {
 		margin: auto;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		i.layout-link-icon {
+		.layout-link-icon {
 			position: relative;
 			font-size: 100px;
 			color: var(--el-color-primary);
@@ -81,6 +82,14 @@ watch(
 				transform: rotate(-15deg);
 				animation: toRight 5s linear infinite;
 			}
+		}
+		.layout-link-open-btn {
+			display: inline-flex;
+			align-items: center;
+		}
+		.layout-link-btn-icon {
+			font-size: 14px;
+			margin-right: 6px;
 		}
 		.layout-link-msg {
 			font-size: 12px;
