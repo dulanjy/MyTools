@@ -69,6 +69,7 @@ pnpm-debug.log*
 # Java / Maven / Gradle
 # ------------------------------
 **/target/
+**/.m2/
 **/.gradle/
 *.class
 *.jar
