@@ -2785,9 +2785,6 @@ class CapturePreviewDuoEnhanced:
         except Exception:
             pass
 
-    def _ai_chat_send(self):
-        return self._ai_chat_send(allow_resend_last=False)
-
     def _ai_chat_send(self, allow_resend_last: bool = False):  # type: ignore[override]
         """发送聊天内容。
 
@@ -2944,110 +2941,6 @@ class CapturePreviewDuoEnhanced:
             else:
                 info.insert('1.0', f"[错误] {res.get('error')}")
         AsyncCall(_call, lambda r: self.show.after(0, lambda: _done(r))).start()
-
-        # ----------------- AI 对话与图像分析功能 -----------------
-        def open_ai_chat_window(self):
-            if getattr(self, '_ai_chat_window', None) and tk.Toplevel.winfo_exists(self._ai_chat_window):
-                try:
-                    self._ai_chat_window.lift(); return
-                except Exception:
-                    pass
-            win = self._ai_chat_window = tk.Toplevel(self.show)
-            win.title('AI 对话')
-            win.geometry('520x480+100+80')
-            win.attributes('-topmost', True)
-            top_bar = ttk.Frame(win); top_bar.pack(fill=tk.X, padx=4, pady=4)
-            ttk.Button(top_bar, text='发送', command=self._ai_chat_send).pack(side=tk.RIGHT, padx=4)
-            ttk.Button(top_bar, text='发送OCR文本', command=self._ai_send_ocr_text).pack(side=tk.RIGHT, padx=4)
-            self._ai_status_var = tk.StringVar(value='就绪' if (self.ai_client and self.ai_client.ready) else '不可用')
-            ttk.Label(top_bar, textvariable=self._ai_status_var).pack(side=tk.LEFT)
-            self._ai_chat_text = tk.Text(win, wrap='word', state='disabled')
-            self._ai_chat_text.pack(fill=tk.BOTH, expand=True, padx=4, pady=(0,4))
-            entry_frame = ttk.Frame(win); entry_frame.pack(fill=tk.X, padx=4, pady=(0,4))
-            self._ai_input = tk.Text(entry_frame, height=4, wrap='word')
-            self._ai_input.pack(fill=tk.X, expand=True)
-            self._ai_input.bind('<Control-Return>', lambda e: (self._ai_chat_send(), 'break'))
-            self._refresh_ai_chat()
-
-        def _append_ai_chat(self, role: str, content: str):
-            self._ai_chat_history.append({'role': role, 'content': content})
-            self._refresh_ai_chat()
-
-        def _refresh_ai_chat(self):
-            if not hasattr(self, '_ai_chat_text'): return
-            try:
-                self._ai_chat_text.config(state='normal')
-                self._ai_chat_text.delete('1.0', tk.END)
-                for msg in self._ai_chat_history[-200:]:  # limit
-                    prefix = '你: ' if msg['role']=='user' else 'AI: '
-                    self._ai_chat_text.insert(tk.END, prefix + msg['content'].strip() + '\n')
-                self._ai_chat_text.config(state='disabled')
-                self._ai_chat_text.see(tk.END)
-            except Exception:
-                pass
-
-        def _ai_chat_send(self):
-            if not self.ai_client or not self.ai_client.ready:
-                messagebox.showwarning('AI','AI 客户端不可用 (缺少密钥或依赖)'); return
-            if self._ai_busy: return
-            content = self._ai_input.get('1.0', tk.END).strip()
-            if not content: return
-            self._ai_input.delete('1.0', tk.END)
-            self._append_ai_chat('user', content)
-            self._ai_busy = True
-            def _call():
-                msgs = []
-                for m in self._ai_chat_history:
-                    # 只保留 role & content 文本
-                    msgs.append({
-                        'role': m['role'],
-                        'content': [{'type':'text','text': m['content']}] if isinstance(m['content'], str) else m['content']
-                    })
-                return self.ai_client.chat(msgs)
-            def _done(res):
-                self._ai_busy = False
-                if 'content' in res:
-                    self._append_ai_chat('assistant', res['content'])
-                else:
-                    self._append_ai_chat('assistant', f"[错误] {res.get('error')}")
-            AsyncCall(_call, lambda r: self.show.after(0, lambda: _done(r))).start()
-
-        def _ai_send_ocr_text(self):
-            # 将最近一次 OCR 文本拼接发送
-            lines = []
-            if hasattr(self, '_all_ocr_lines') and self._all_ocr_lines:
-                lines = [ln.get('text','') for ln in self._all_ocr_lines if ln.get('text')]
-            if not lines:
-                messagebox.showinfo('AI','无可用 OCR 文本，请先执行 OCR'); return
-            content = '\n'.join(lines)[:4000]  # 简单截断
-            self._append_ai_chat('user', f"以下为OCR结果，请帮我总结或回答问题：\n{content}")
-            self._ai_chat_send()
-
-        def analyze_current_frame(self):
-            if not self.ai_client or not self.ai_client.ready:
-                messagebox.showwarning('AI','AI 客户端不可用 (缺少密钥或依赖)'); return
-            if not self.last_pil:
-                messagebox.showinfo('AI','当前无画面'); return
-            if self._ai_busy: return
-            self._ai_busy = True
-            prompt = '请描述这张截图的关键信息，并提取可见文字要点（不必逐字转录），如果发现界面元素请概括其用途。'
-            top = tk.Toplevel(self.show)
-            top.title('AI 图像分析')
-            top.geometry('540x380+120+120')
-            top.attributes('-topmost', True)
-            info = tk.Text(top, wrap='word')
-            info.pack(fill=tk.BOTH, expand=True)
-            info.insert('1.0', '分析中，请稍候...')
-            def _call():
-                return self.ai_client.analyze_image(self.last_pil, prompt)
-            def _done(res):
-                self._ai_busy = False
-                info.delete('1.0', tk.END)
-                if 'content' in res:
-                    info.insert('1.0', res['content'])
-                else:
-                    info.insert('1.0', f"[错误] {res.get('error')}")
-            AsyncCall(_call, lambda r: self.show.after(0, lambda: _done(r))).start()
 
     def _on_close_ocr_text_window(self):
         try:
