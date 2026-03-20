@@ -46,6 +46,15 @@ const alias: Record<string, string> = {
 	'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js',
 };
 
+const normalizeProxyTarget = (raw: string | undefined, fallback: string): string => {
+	const value = (raw ?? '').trim().replace(/^['"]|['"]$/g, '');
+	if (!value) return fallback;
+	if (/^https?:\/\//i.test(value)) return value;
+	// Accept bare host:port and normalize to http URL.
+	if (/^[\w.-]+(?::\d+)?(?:\/.*)?$/i.test(value)) return `http://${value}`;
+	return fallback;
+};
+
 const viteConfig = defineConfig((mode: ConfigEnv) => {
 	const env = loadEnv(mode.mode, process.cwd());
 	return {
@@ -64,14 +73,14 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 			proxy: {
 				'/api': {
 					// Proxy API requests to Spring Boot backend.
-					target: env.VITE_SPRING_BASE_URL || 'http://localhost:9999/',
+					target: normalizeProxyTarget(env.VITE_SPRING_BASE_URL, 'http://localhost:9999/'),
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, ''),
 				},
 				'/flask': {
 					// Proxy Flask requests to Python backend.
-					target: env.VITE_FLASK_BASE_URL || 'http://localhost:5000/',
+					target: normalizeProxyTarget(env.VITE_FLASK_BASE_URL, 'http://localhost:5000/'),
 					ws: true,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/flask/, ''),
