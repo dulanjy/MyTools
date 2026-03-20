@@ -77,8 +77,19 @@ public class FileController {
     public void getFiles(@PathVariable String flag, HttpServletResponse response) {
         OutputStream os;
         String basePath = normalizeDir(resolveStoragePath(""));
-        List<String> fileNames = FileUtil.listFileNames(basePath);
-        String fileName = fileNames.stream().filter(name -> name.contains(flag)).findAny().orElse("");
+        String safeFlag = Paths.get(flag).getFileName().toString();
+        String fileName = "";
+        File exactFile = new File(resolveStoragePath(safeFlag));
+        if (exactFile.exists() && exactFile.isFile()) {
+            fileName = exactFile.getName();
+        } else {
+            List<String> fileNames = FileUtil.listFileNames(basePath);
+            String prefix = safeFlag + "_";
+            fileName = fileNames.stream()
+                    .filter(name -> name.equals(safeFlag) || name.startsWith(prefix))
+                    .findFirst()
+                    .orElse("");
+        }
         try {
             if (StrUtil.isNotEmpty(fileName)) {
                 response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
