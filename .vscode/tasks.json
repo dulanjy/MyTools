@@ -2,15 +2,26 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "MySQL: Start (3306)",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "mysqld --console"
+            ],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
             "label": "Flask: Serve (5000)",
             "type": "shell",
             "command": "cmd",
             "args": [
                 "/c",
-                "C:\\Users\\hp1\\anaconda3\\Scripts\\activate && conda activate yolov8 && python main.py"
+                "set KMP_DUPLICATE_LIB_OK=TRUE&& set OMP_NUM_THREADS=1&& D:\\Software\\anaconda3\\Scripts\\conda.exe run --no-capture-output -n yolov8 python -u main.py"
             ],
             "options": {
-                "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask"
+                "cwd": "C:/Users/Chengxiaoyu/Documents/GitHub/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask"
             },
             "isBackground": true,
             "problemMatcher": []
@@ -24,7 +35,7 @@
                 ".\\mvnw.cmd spring-boot:run -DskipTests"
             ],
             "options": {
-                "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot"
+                "cwd": "C:/Users/Chengxiaoyu/Documents/GitHub/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot"
             },
             "isBackground": true,
             "problemMatcher": []
@@ -32,13 +43,13 @@
         {
             "label": "Vite: Dev (8888)",
             "type": "shell",
-            "command": "npm",
+            "command": "cmd",
             "args": [
-                "run",
-                "dev"
+                "/c",
+                "set BROWSER=none&& npm install && npm run dev"
             ],
             "options": {
-                "cwd": "g:/MyCode/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue"
+                "cwd": "C:/Users/Chengxiaoyu/Documents/GitHub/MyTools/yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_vue"
             },
             "isBackground": true,
             "problemMatcher": []
@@ -52,6 +63,7 @@
                 "echo starting dev services"
             ],
             "dependsOn": [
+                "MySQL: Start (3306)",
                 "Flask: Serve (5000)",
                 "Spring: Run (9999)",
                 "Vite: Dev (8888)"
