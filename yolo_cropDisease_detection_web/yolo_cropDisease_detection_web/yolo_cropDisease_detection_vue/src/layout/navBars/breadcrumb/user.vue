@@ -74,6 +74,7 @@ import { Session, Local } from '/@/utils/storage';
 import Cookies from 'js-cookie';
 import screenfull from 'screenfull';
 import mittBus from '/@/utils/mitt';
+import logoMini from '/@/assets/logo-mini.svg';
 // 引入组件
 // const UserNews = defineAsyncComponent(() => import('/@/layout/navBars/breadcrumb/userNews.vue'));
 const Search = defineAsyncComponent(() => import('/@/layout/navBars/breadcrumb/search.vue'));
@@ -87,7 +88,7 @@ const { userInfos } = storeToRefs(stores);
 const { themeConfig } = storeToRefs(storesThemeConfig);
 const searchRef = ref();
 const state = reactive({
-	img: '',
+	img: logoMini,
 	isScreenfull: false,
 	disabledI18n: 'zh-cn',
 	disabledSize: 'large',
@@ -184,11 +185,16 @@ const initI18nOrSize = (value: string, attr: string) => {
 	state[attr] = Local.get('themeConfig')[value];
 };
 const getTableData = () => {
+	if (!userInfos.value.userName) {
+		state.img = logoMini;
+		return;
+	}
 	request.get('/api/user/' + userInfos.value.userName).then((res) => {
 		// console.log(res);
-		if (res.code == 0) {
-			state.img = res.data.avatar;
+		if (res.code == 0 && res.data) {
+			state.img = res.data.avatar || logoMini;
 		} else {
+			state.img = logoMini;
 			ElMessage({
 				type: 'error',
 				message: res.msg,

@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
@@ -35,7 +36,9 @@ public class VideoRecordsController {
                               @RequestParam(defaultValue = "") String search,
                               @RequestParam(defaultValue = "") String search1,
                               @RequestParam(defaultValue = "") String search3,
-                              @RequestParam(defaultValue = "") String search2) {
+                              @RequestParam(defaultValue = "") String search2,
+                              @RequestParam(defaultValue = "") String startTimeFrom,
+                              @RequestParam(defaultValue = "") String startTimeTo) {
         LambdaQueryWrapper<VideoRecords> wrapper = Wrappers.<VideoRecords>lambdaQuery();
         wrapper.orderByDesc(VideoRecords::getStartTime);
         if (StrUtil.isNotBlank(search)) {
@@ -50,6 +53,12 @@ public class VideoRecordsController {
         if (StrUtil.isNotBlank(search3)) {
             wrapper.like(VideoRecords::getConf, search3);
         }
+        if (StrUtil.isNotBlank(startTimeFrom)) {
+            wrapper.ge(VideoRecords::getStartTime, startTimeFrom);
+        }
+        if (StrUtil.isNotBlank(startTimeTo)) {
+            wrapper.le(VideoRecords::getStartTime, startTimeTo);
+        }
         Page<VideoRecords> Page = videoRecordsMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         return Result.success(Page);
     }
@@ -57,6 +66,15 @@ public class VideoRecordsController {
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable int id) {
         videoRecordsMapper.deleteById(id);
+        return Result.success();
+    }
+
+    @PostMapping("/batchDelete")
+    public Result<?> batchDelete(@RequestBody List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success();
+        }
+        videoRecordsMapper.deleteBatchIds(ids);
         return Result.success();
     }
 

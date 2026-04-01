@@ -59,7 +59,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-ziyuanxhdpi',
+					icon: 'ele-View',
 				},
 			},
 			{
@@ -67,14 +67,14 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				name: 'behaviorBi',
 				component: () => import('/@/views/behaviorBi/index.vue'),
 				meta: {
-					title: '学生行为分析BI',
+					title: '学生行为分析',
 					isLink: '',
 					isHide: false,
 					isKeepAlive: true,
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shujukeshihua',
+					icon: 'ele-DataAnalysis',
 				},
 			},
 			{
@@ -239,6 +239,14 @@ export const staticRoutes: Array<RouteRecordRaw> = [
 		component: () => import('/@/views/login/index.vue'),
 		meta: {
 			title: '登录',
+		},
+	},
+	{
+		path: '/home',
+		name: 'home',
+		redirect: '/imgPredict',
+		meta: {
+			isHide: true,
 		},
 	},
 	{

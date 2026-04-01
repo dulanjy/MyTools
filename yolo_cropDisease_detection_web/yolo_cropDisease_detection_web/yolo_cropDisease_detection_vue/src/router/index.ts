@@ -7,6 +7,7 @@ import { useKeepALiveNames } from '/@/stores/keepAliveNames';
 import { useRoutesList } from '/@/stores/routesList';
 import { useThemeConfig } from '/@/stores/themeConfig';
 import { Session } from '/@/utils/storage';
+import { NextLoading } from '/@/utils/loading';
 import { staticRoutes, notFoundAndNoPower } from '/@/router/route';
 import { initFrontEndControlRoutes } from '/@/router/frontEnd';
 import { initBackEndControlRoutes } from '/@/router/backEnd';
@@ -105,6 +106,10 @@ router.beforeEach(async (to, from, next) => {
 	} else if (to.path === '/register' && !token) {
 		next();
 		NProgress.done();
+	} else if (to.path === '/home') {
+		next('/');
+		NProgress.done();
+		return;
 	} else if (to.path === '/videoShow' && token) {
 		next();
 		NProgress.done();
@@ -114,25 +119,43 @@ router.beforeEach(async (to, from, next) => {
 			Session.clear();
 			NProgress.done();
 		} else if (token && to.path === '/login') {
-			next('/home');
+			next('/');
 			NProgress.done();
 		} else {
 			const storesRoutesList = useRoutesList(pinia);
 			const { routesList } = storeToRefs(storesRoutesList);
 			if (routesList.value.length === 0) {
-				if (isRequestRoutes) {
-					// 后端控制路由：路由数据初始化，防止刷新时丢失
-					await initBackEndControlRoutes();
-					// 解决刷新时，一直跳 404 页面问题，关联问题 No match found for location with path 'xxx'
-					// to.query 防止页面刷新时，普通路由带参数时，参数丢失。动态路由（xxx/:id/:name"）isDynamic 无需处理
-					next({ path: to.path, query: to.query });
-				} else {
-					// https://gitee.com/lyt-top/vue-next-admin/issues/I5F1HP
-					await initFrontEndControlRoutes();
-					next({ path: to.path, query: to.query });
+				try {
+					if (isRequestRoutes) {
+						await initBackEndControlRoutes();
+					} else {
+						await initFrontEndControlRoutes();
+					}
+				} catch (error) {
+					Session.clear();
+					NextLoading.done(0);
+					next(`/login?redirect=${to.path}&params=${JSON.stringify(to.query ? to.query : to.params)}`);
+					NProgress.done();
+					return;
 				}
+				if (storesRoutesList.routesList.length === 0) {
+					Session.clear();
+					NextLoading.done(0);
+					next(`/login?redirect=${to.path}&params=${JSON.stringify(to.query ? to.query : to.params)}`);
+					NProgress.done();
+					return;
+				}
+				if (to.path === '/') {
+					next({ path: '/imgPredict', replace: true });
+				} else {
+					// 首次刷新时若先命中 notFound，这里不能透传 name，否则会继续停留在 404
+					next({ path: to.path, query: to.query, hash: to.hash, replace: true });
+				}
+				return;
 			} else {
-				next();
+				if (to.path === '/') next('/imgPredict');
+				else next();
+				return;
 			}
 		}
 	}
@@ -141,6 +164,7 @@ router.beforeEach(async (to, from, next) => {
 // 路由加载后
 router.afterEach(() => {
 	NProgress.done();
+	NextLoading.done(0);
 });
 
 // 导出路由

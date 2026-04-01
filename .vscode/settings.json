@@ -1,23 +1,36 @@
-{
-    "python-envs.defaultEnvManager": "ms-python.python:conda",
-    "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": [],
-    "cmake.ignoreCMakeListsMissing": true,
-    "sqltools.connections": [
-        {
-            "mysqlOptions": {
-                "authProtocol": "default",
-                "enableSsl": "Disabled"
-            },
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 3306,
-            "driver": "MySQL",
-            "name": "localhost_dev",
-            "database": "cropdisease",
-            "username": "root"
-        }
-    ],
-    "git.ignoreLimitWarning": true
+﻿{
+    "python-envs.defaultEnvManager":  "ms-python.python:conda",
+    "python-envs.defaultPackageManager":  "ms-python.python:conda",
+    "python-envs.pythonProjects":  [
+
+                                   ],
+    "cmake.ignoreCMakeListsMissing":  true,
+    "sqltools.connections":  [
+                                 {
+                                     "mysqlOptions":  {
+                                                          "authProtocol":  "default",
+                                                          "enableSsl":  "Disabled"
+                                                      },
+                                     "ssh":  "Disabled",
+                                     "previewLimit":  50,
+                                     "server":  "localhost",
+                                     "port":  3306,
+                                     "driver":  "MySQL",
+                                     "name":  "localhost_dev",
+                                     "database":  "cropdisease",
+                                     "username":  "root"
+                                 }
+                             ],
+    "git.ignoreLimitWarning":  true,
+    "java.import.exclusions":  [
+                                   "**/PaddleOCR-main/deploy/android_demo/**",
+                                   "**/deploy/android_demo/**"
+                               ],
+    "java.configuration.updateBuildConfiguration":  "disabled",
+    "gradle.nestedProjects":  false,
+    "gradle.autoDetect":  "off",
+    "java.import.gradle.enabled":  false,
+    "java.import.maven.enabled": false,
+    "java.project.importOnFirstTimeStartup": "disabled",
+    "java.autobuild.enabled": false
 }

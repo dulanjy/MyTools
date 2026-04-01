@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
@@ -34,7 +35,9 @@ public class CameraRecordsController {
                               @RequestParam(defaultValue = "") String search,
                               @RequestParam(defaultValue = "") String search1,
                               @RequestParam(defaultValue = "") String search3,
-                              @RequestParam(defaultValue = "") String search2) {
+                              @RequestParam(defaultValue = "") String search2,
+                              @RequestParam(defaultValue = "") String startTimeFrom,
+                              @RequestParam(defaultValue = "") String startTimeTo) {
         LambdaQueryWrapper<CameraRecords> wrapper = Wrappers.<CameraRecords>lambdaQuery();
         wrapper.orderByDesc(CameraRecords::getStartTime);
         if (StrUtil.isNotBlank(search)) {
@@ -49,6 +52,12 @@ public class CameraRecordsController {
         if (StrUtil.isNotBlank(search3)) {
             wrapper.like(CameraRecords::getConf, search3);
         }
+        if (StrUtil.isNotBlank(startTimeFrom)) {
+            wrapper.ge(CameraRecords::getStartTime, startTimeFrom);
+        }
+        if (StrUtil.isNotBlank(startTimeTo)) {
+            wrapper.le(CameraRecords::getStartTime, startTimeTo);
+        }
         Page<CameraRecords> Page = cameraRecordsMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         return Result.success(Page);
     }
@@ -56,6 +65,15 @@ public class CameraRecordsController {
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable int id) {
         cameraRecordsMapper.deleteById(id);
+        return Result.success();
+    }
+
+    @PostMapping("/batchDelete")
+    public Result<?> batchDelete(@RequestBody List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success();
+        }
+        cameraRecordsMapper.deleteBatchIds(ids);
         return Result.success();
     }
 

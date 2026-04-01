@@ -136,7 +136,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局网站标题 / 副标题
 			 */
 			// 网站主标题（菜单导航、浏览器当前网页标题）
-			globalTitle: 'STUDENT BEHAVIOR DETECTION',
+			globalTitle: '学生行为检测',
 			// 网站副标题（登录页顶部文字）
 			globalViceTitle: 'YOLOV11智能检测系统',
 			// 网站副标题（登录页顶部文字）
@@ -149,6 +149,8 @@ export const useThemeConfig = defineStore('themeConfig', {
 	}),
 	actions: {
 		setThemeConfig(data: ThemeConfigState) {
+			const lockScreenTime = Number(data.themeConfig.lockScreenTime);
+			data.themeConfig.lockScreenTime = Number.isFinite(lockScreenTime) ? lockScreenTime : 30;
 			this.themeConfig = data.themeConfig;
 		},
 	},

@@ -83,8 +83,8 @@ class VideoProcessingApp:
         self.paths = {
             'download': './runs/video/download.mp4',
             'output': './runs/video/output.mp4',
-            'camera_output': './runs/video/camera_output.avi',
-            'video_output': './runs/video/camera_output.avi',
+            'camera_output': './runs/video/camera_output.mp4',
+            'video_output': './runs/video/video_output.mp4',
         }
         self.recording = False
         self.setup_routes()
@@ -133,7 +133,7 @@ class VideoProcessingApp:
         @self.socketio.on('connect')
         def handle_connect():
             print('WebSocket connected!')
-            emit('message', {'data': 'Connected to WebSocket server!'})
+            emit('message', {'data': {'type': 'system', 'text': 'Connected to WebSocket server!'}})
 
         @self.socketio.on('disconnect')
         def handle_disconnect():
@@ -212,6 +212,31 @@ class VideoProcessingApp:
 
     def files_get(self, filename: str):
         return send_from_directory('./files', filename, as_attachment=False)
+
+    def publish_local_file(self, file_path: str) -> Optional[str]:
+        """Copy local result file into ./files and return a Flask-served URL."""
+        try:
+            if not file_path or not os.path.exists(file_path):
+                return None
+            os.makedirs('./files', exist_ok=True)
+            src_name = os.path.basename(file_path)
+            name = f"{uuid.uuid4().hex}_{src_name}"
+            target = os.path.join('./files', name)
+            shutil.copyfile(file_path, target)
+            return f"http://localhost:{self.port}/files/{name}"
+        except Exception:
+            return None
+
+    def _create_video_writer(self, output_path: str, fps: float, frame_size: tuple[int, int]):
+        """Create an MP4 writer, preferring browser-compatible codecs."""
+        use_fps = float(fps) if fps and fps > 1 else 25.0
+        for codec in ('avc1', 'H264', 'mp4v'):
+            writer = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*codec), use_fps, frame_size)
+            if writer.isOpened():
+                print(f"VideoWriter initialized with codec: {codec}")
+                return writer
+            writer.release()
+        raise ValueError(f"Failed to initialize video writer for {output_path}")
 
     # -------- Endpoints --------
     def file_names(self):
@@ -391,6 +416,108 @@ class VideoProcessingApp:
             return jsonify({'code': code, 'data': json.dumps(body, ensure_ascii=False)})
         except Exception as e:
             return jsonify({'code': 500, 'msg': str(e)})
+
+    def _build_behavior_payload_from_dual(self, merged: Dict[str, Any], classroom_id: str = 'Class-Default') -> Dict[str, Any]:
+        """Build BehaviorRecord payload from dualDetect output."""
+        counts = merged.get('counts') or {}
+        if not isinstance(counts, dict):
+            counts = {}
+        student_count = int(merged.get('head') or merged.get('人数') or 0)
+        if student_count <= 0:
+            try:
+                student_count = sum(int(v) for v in counts.values() if isinstance(v, (int, float)))
+            except Exception:
+                student_count = 0
+
+        def _sum_by_keywords(keys: List[str]) -> int:
+            total = 0
+            for k, v in counts.items():
+                ks = str(k).lower()
+                if any(x in ks for x in keys):
+                    try:
+                        total += int(v)
+                    except Exception:
+                        pass
+            return total
+
+        low_focus = _sum_by_keywords(['low', 'phone', 'sleep', 'down', '低头', '睡', '玩手机', '走神'])
+        active = _sum_by_keywords(['raise', 'interact', 'write', 'active', '举手', '互动', '书写'])
+        if student_count > 0:
+            focus_score = max(0, min(100, int((1 - (low_focus / student_count)) * 100)))
+            activity_score = max(0, min(100, int((active / student_count) * 100)))
+        else:
+            focus_score = 0
+            activity_score = 0
+
+        if activity_score >= 60:
+            interaction_level = 'high'
+        elif activity_score >= 30:
+            interaction_level = 'medium'
+        else:
+            interaction_level = 'low'
+
+        metrics = {
+            'source': 'dualDetect',
+            'student_count': student_count,
+            'focus_score': focus_score,
+            'activity_score': activity_score,
+            'low_focus_count': low_focus,
+            'active_count': active,
+            'counts': counts,
+            'head': student_count,
+        }
+        risks = []
+        if student_count > 0 and low_focus / student_count >= 0.4:
+            risks.append({'type': 'focus', 'level': 'medium', 'detail': 'High low-focus ratio detected'})
+
+        suggestions = []
+        if risks:
+            suggestions.append('Review seating and engagement strategy for low-focus students.')
+        else:
+            suggestions.append('Current classroom behavior appears stable.')
+
+        return {
+            'classroomId': classroom_id or 'Class-Default',
+            'studentCount': student_count,
+            'focusScore': focus_score,
+            'activityScore': activity_score,
+            'interactionLevel': interaction_level,
+            'metricsJson': json.dumps(metrics, ensure_ascii=False),
+            'spatialJson': json.dumps({'boxes': merged.get('boxes') or {}}, ensure_ascii=False),
+            'risksJson': json.dumps(risks, ensure_ascii=False),
+            'suggestionsJson': json.dumps(suggestions, ensure_ascii=False),
+        }
+
+    def _save_behavior_payload_to_db(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """POST payload to Spring /behavior/save and return detailed status."""
+        base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
+        save_url = f"{base_url}/behavior/save"
+        try:
+            response = requests.post(save_url, json=payload, timeout=8)
+            if response.status_code != 200:
+                detail = ''
+                try:
+                    detail = response.text or ''
+                except Exception:
+                    detail = ''
+                message = f'Behavior DB save failed (HTTP {response.status_code})'
+                if 'student_behavior_records' in detail and "doesn't exist" in detail:
+                    message = 'Behavior DB table missing: student_behavior_records. Import yolo_cropDisease_detection_web/db/mydb.sql first.'
+                return {
+                    'success': False,
+                    'status_code': response.status_code,
+                    'error': message,
+                    'detail': detail[:500] if detail else None,
+                    'url': save_url,
+                }
+            return {'success': True, 'status_code': response.status_code, 'url': save_url}
+        except Exception as e:
+            return {
+                'success': False,
+                'status_code': None,
+                'error': f'Behavior DB save failed: {e}',
+                'url': save_url,
+            }
 
     def analyze(self):
         """一体化：检测 + AI 分析。
@@ -1300,35 +1427,36 @@ class VideoProcessingApp:
                 saved_analysis_png_path = None
                 saved_reference_json_path = None
 
-        # -------- 新增：保存到 Spring Boot 数据库 --------
+        db_save = None
         try:
             if result_json and isinstance(result_json, dict):
-                # 提取关键指标
                 metrics = result_json.get('metrics') or {}
                 spatial = result_json.get('spatial') or {}
                 risks = result_json.get('risks') or []
                 suggestions = result_json.get('suggestions') or []
-                
-                # 提取分数
+
                 focus_score = 0
                 activity_score = 0
                 try:
                     focus_score = int(metrics.get('focus_score', 0))
                     activity_score = int(metrics.get('activity_score', 0))
-                except:
+                except Exception:
                     pass
 
-                # 提取人数
                 student_count = 0
                 try:
-                    student_count = int(result_json.get('head') or result_json.get('人数') or 0)
-                except:
+                    student_count = int(
+                        result_json.get('head')
+                        or result_json.get('person_count')
+                        or result_json.get('人数')
+                        or metrics.get('student_count')
+                        or 0
+                    )
+                except Exception:
                     pass
 
-                # 构造发送给 Spring Boot 的数据对象
-                # 对应 Java 实体类 BehaviorRecord 的字段
                 payload = {
-                    'classroomId': 'Class-Default', # 暂时硬编码，后续可从前端传参
+                    'classroomId': str(data.get('classroomId') or 'Class-Default'),
                     'studentCount': student_count,
                     'focusScore': focus_score,
                     'activityScore': activity_score,
@@ -1336,16 +1464,12 @@ class VideoProcessingApp:
                     'metricsJson': json.dumps(metrics, ensure_ascii=False),
                     'spatialJson': json.dumps(spatial, ensure_ascii=False),
                     'risksJson': json.dumps(risks, ensure_ascii=False),
-                    'suggestionsJson': json.dumps(suggestions, ensure_ascii=False)
+                    'suggestionsJson': json.dumps(suggestions, ensure_ascii=False),
                 }
-
-                # 发送请求
-                base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
-                save_url = f"{base_url}/behavior/save"
-                requests.post(save_url, json=payload, timeout=5)
+                db_save = self._save_behavior_payload_to_db(payload)
         except Exception as e:
+            db_save = {'success': False, 'error': f'Behavior DB save failed: {e}'}
             print(f"Failed to save behavior record to DB: {e}")
-        # -----------------------------------------------
 
         return jsonify({
             'status': 200,
@@ -1359,6 +1483,7 @@ class VideoProcessingApp:
             'saved_analysis_json_path': saved_analysis_json_path,
             'saved_analysis_png_path': saved_analysis_png_path,
             'saved_reference_json_path': saved_reference_json_path,
+            'db_save': db_save,
         })
 
     def dualDetect(self):
@@ -1482,6 +1607,14 @@ class VideoProcessingApp:
         resp = { "status": 200, "message": "OK", **merged }
         if saved_paths:
             resp['saved_paths'] = saved_paths
+        db_save = None
+        try:
+            classroom_id = str(data.get('classroomId') or 'Class-Default')
+            payload = self._build_behavior_payload_from_dual(merged, classroom_id=classroom_id)
+            db_save = self._save_behavior_payload_to_db(payload)
+        except Exception as e:
+            db_save = {'success': False, 'error': f'Behavior DB save failed: {e}'}
+        resp['db_save'] = db_save
         return jsonify(resp)
 
     def predictVideo(self):
@@ -1491,7 +1624,8 @@ class VideoProcessingApp:
             "username": request.args.get('username'), "weight": request.args.get('weight'),
             "conf": request.args.get('conf'), "startTime": request.args.get('startTime'),
             "inputVideo": request.args.get('inputVideo'),
-            "kind": request.args.get('kind')
+            "kind": request.args.get('kind'),
+            "taskId": request.args.get('taskId') or uuid.uuid4().hex
         })
         # 若未显式传 kind，则根据权重名推断
         if not self.data.get('kind'):
@@ -1500,40 +1634,86 @@ class VideoProcessingApp:
         cap = cv2.VideoCapture(self.paths['download'])
         if not cap.isOpened():
             raise ValueError("无法打开视频文件")
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        fps_raw = cap.get(cv2.CAP_PROP_FPS)
+        fps = int(fps_raw) if fps_raw and fps_raw > 1 else 25
         print(fps)
 
         # 视频写入器
-        video_writer = cv2.VideoWriter(
-            self.paths['video_output'],
-            cv2.VideoWriter_fourcc(*'XVID'),
-            fps,
-            (640, 480)
-        )
+        video_writer = self._create_video_writer(self.paths['video_output'], fps, (640, 480))
         model = YOLO(f'./weights/{self.data["weight"]}') if YOLO is not None else None
 
         def generate():
+            frame_idx = 0
             try:
                 while cap.isOpened():
                     ret, frame = cap.read()
                     if not ret:
                         break
+                    frame_idx += 1
                     frame = cv2.resize(frame, (640, 480))
+                    counts: Dict[str, int] = {}
+                    avg_conf = 0.0
                     if model is not None:
                         results = model.predict(source=frame, conf=float(self.data['conf'] or 0.25), show=False)
-                        processed_frame = results[0].plot()
+                        r0 = results[0]
+                        processed_frame = r0.plot()
+                        try:
+                            cls_list = []
+                            conf_list = []
+                            names = r0.names if isinstance(getattr(r0, 'names', None), dict) else {}
+                            if getattr(r0, 'boxes', None) is not None:
+                                if getattr(r0.boxes, 'cls', None) is not None:
+                                    cls_list = r0.boxes.cls.tolist()
+                                if getattr(r0.boxes, 'conf', None) is not None:
+                                    conf_list = r0.boxes.conf.tolist()
+                            for i, cid in enumerate(cls_list):
+                                cid_int = int(cid)
+                                lbl = names.get(cid_int, str(cid_int))
+                                counts[lbl] = counts.get(lbl, 0) + 1
+                                if i < len(conf_list):
+                                    try:
+                                        avg_conf += float(conf_list[i])
+                                    except Exception:
+                                        pass
+                            if conf_list:
+                                avg_conf = avg_conf / len(conf_list)
+                        except Exception:
+                            counts = {}
+                            avg_conf = 0.0
                     else:
                         processed_frame = frame
+                    if total_frames > 0 and frame_idx % 10 == 0:
+                        reading_progress = min(95, int((frame_idx / max(1, total_frames)) * 95))
+                        progress_payload = {'taskId': self.data.get('taskId'), 'progress': reading_progress}
+                        self.socketio.emit('progress', {'data': progress_payload, **progress_payload})
+                    if frame_idx % 6 == 0:
+                        stats_payload = {
+                            'taskId': self.data.get('taskId'),
+                            'frame': frame_idx,
+                            'total': int(sum(counts.values())),
+                            'avgConfidence': round(avg_conf * 100, 2),
+                            'counts': counts,
+                        }
+                        self.socketio.emit('stats', {'data': stats_payload, **stats_payload})
                     video_writer.write(processed_frame)
                     _, jpeg = cv2.imencode('.jpg', processed_frame)
                     yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             finally:
                 self.cleanup_resources(cap, video_writer)
-                self.socketio.emit('message', {'data': '处理完成，正在保存！'})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '处理完成，正在保存！'}})
                 for progress in self.convert_avi_to_mp4(self.paths['video_output']):
-                    self.socketio.emit('progress', {'data': progress})
-                uploadedUrl = self.upload(self.paths['output'])
-                self.data['outVideo'] = uploadedUrl
+                    try:
+                        final_progress = 95 + int(float(progress) * 0.05)
+                    except Exception:
+                        final_progress = 100
+                    progress_payload = {'taskId': self.data.get('taskId'), 'progress': min(100, max(95, final_progress))}
+                    self.socketio.emit('progress', {'data': progress_payload, **progress_payload})
+                upload_path = self.paths['output'] if os.path.exists(self.paths['output']) else self.paths['video_output']
+                uploadedUrl = self.upload(upload_path)
+                if not uploadedUrl:
+                    uploadedUrl = self.publish_local_file(upload_path)
+                self.data['outVideo'] = uploadedUrl or ''
                 # 记录上报到 Spring：支持环境变量配置与 /api 回退
                 try:
                     base_url = os.environ.get('SPRING_BASE_URL', 'http://localhost:9999').rstrip('/')
@@ -1551,6 +1731,7 @@ class VideoProcessingApp:
                             break
                 except Exception as _e:
                     print(f"上报 videoRecords 时发生错误: {_e}")
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '视频处理完成'}})
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['video_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1561,40 +1742,86 @@ class VideoProcessingApp:
         self.data.update({
             "username": request.args.get('username'), "weight": request.args.get('weight'),
             "kind": request.args.get('kind'),
-            "conf": request.args.get('conf'), "startTime": request.args.get('startTime')
+            "conf": request.args.get('conf'), "startTime": request.args.get('startTime'),
+            "taskId": request.args.get('taskId') or uuid.uuid4().hex
         })
         if not self.data.get('kind'):
             self.data['kind'] = self._infer_kind(self.data.get('weight')) or 'student'
-        self.socketio.emit('message', {'data': '正在加载，请稍等！'})
+        self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '正在加载，请稍等！'}})
         model = YOLO(f'./weights/{self.data["weight"]}') if YOLO is not None else None
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        video_writer = cv2.VideoWriter(self.paths['camera_output'], cv2.VideoWriter_fourcc(*'XVID'),  20, (640, 480))
+        video_writer = self._create_video_writer(self.paths['camera_output'], 20, (640, 480))
         self.recording = True
 
         def generate():
+            frame_idx = 0
             try:
                 while self.recording:
                     ret, frame = cap.read()
                     if not ret:
                         break
+                    frame_idx += 1
+                    counts: Dict[str, int] = {}
+                    avg_conf = 0.0
                     if model is not None:
                         results = model.predict(source=frame, imgsz=640, conf=float(self.data['conf'] or 0.25), show=False)
-                        processed_frame = results[0].plot()
+                        r0 = results[0]
+                        processed_frame = r0.plot()
+                        try:
+                            cls_list = []
+                            conf_list = []
+                            names = r0.names if isinstance(getattr(r0, 'names', None), dict) else {}
+                            if getattr(r0, 'boxes', None) is not None:
+                                if getattr(r0.boxes, 'cls', None) is not None:
+                                    cls_list = r0.boxes.cls.tolist()
+                                if getattr(r0.boxes, 'conf', None) is not None:
+                                    conf_list = r0.boxes.conf.tolist()
+                            for i, cid in enumerate(cls_list):
+                                cid_int = int(cid)
+                                lbl = names.get(cid_int, str(cid_int))
+                                counts[lbl] = counts.get(lbl, 0) + 1
+                                if i < len(conf_list):
+                                    try:
+                                        avg_conf += float(conf_list[i])
+                                    except Exception:
+                                        pass
+                            if conf_list:
+                                avg_conf = avg_conf / len(conf_list)
+                        except Exception:
+                            counts = {}
+                            avg_conf = 0.0
                     else:
                         processed_frame = frame
+                    if frame_idx % 6 == 0:
+                        stats_payload = {
+                            'taskId': self.data.get('taskId'),
+                            'frame': frame_idx,
+                            'total': int(sum(counts.values())),
+                            'avgConfidence': round(avg_conf * 100, 2),
+                            'counts': counts,
+                        }
+                        self.socketio.emit('stats', {'data': stats_payload, **stats_payload})
                     if self.recording and video_writer:
                         video_writer.write(processed_frame)
                     _, jpeg = cv2.imencode('.jpg', processed_frame)
                     yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             finally:
                 self.cleanup_resources(cap, video_writer)
-                self.socketio.emit('message', {'data': '处理完成，正在保存！'})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '处理完成，正在保存！'}})
                 for progress in self.convert_avi_to_mp4(self.paths['camera_output']):
-                    self.socketio.emit('progress', {'data': progress})
-                uploadedUrl = self.upload(self.paths['output'])
-                self.data["outVideo"] = uploadedUrl
+                    try:
+                        final_progress = 95 + int(float(progress) * 0.05)
+                    except Exception:
+                        final_progress = 100
+                    progress_payload = {'taskId': self.data.get('taskId'), 'progress': min(100, max(95, final_progress))}
+                    self.socketio.emit('progress', {'data': progress_payload, **progress_payload})
+                upload_path = self.paths['output'] if os.path.exists(self.paths['output']) else self.paths['camera_output']
+                uploadedUrl = self.upload(upload_path)
+                if not uploadedUrl:
+                    uploadedUrl = self.publish_local_file(upload_path)
+                self.data["outVideo"] = uploadedUrl or ''
                 print(self.data)
                 # 记录上报到 Spring：支持环境变量配置与 /api 回退
                 try:
@@ -1613,6 +1840,7 @@ class VideoProcessingApp:
                             break
                 except Exception as _e:
                     print(f"上报 cameraRecords 时发生错误: {_e}")
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '摄像处理完成'}})
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['camera_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1689,25 +1917,79 @@ class VideoProcessingApp:
             return None
 
     def convert_avi_to_mp4(self, temp_output):
-        """使用 FFmpeg 将 AVI 格式转换为 MP4 格式，并显示转换进度。"""
-        ffmpeg_command = f"ffmpeg -i {temp_output} -vcodec libx264 {self.paths['output']} -y"
-        process = subprocess.Popen(ffmpeg_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True)
+        """Convert AVI to browser-friendly MP4 with FFmpeg."""
+        out_path = self.paths['output']
+        input_ext = str(Path(temp_output).suffix or '').lower()
+        if input_ext == '.mp4':
+            try:
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+            except Exception:
+                pass
+            if temp_output != out_path:
+                try:
+                    shutil.copyfile(temp_output, out_path)
+                except Exception as e:
+                    print(f"copy mp4 output failed: {e}")
+            yield 100
+            return
+
+        ffmpeg_bin = shutil.which('ffmpeg')
+        if not ffmpeg_bin:
+            print("ffmpeg not found, skip mp4 conversion.")
+            try:
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+            except Exception:
+                pass
+            yield 100
+            return
+
+        try:
+            if os.path.exists(out_path):
+                os.remove(out_path)
+        except Exception:
+            pass
+
+        ffmpeg_command = [
+            ffmpeg_bin,
+            '-y',
+            '-i',
+            temp_output,
+            '-c:v',
+            'libx264',
+            '-pix_fmt',
+            'yuv420p',
+            '-movflags',
+            '+faststart',
+            out_path,
+        ]
+        process = subprocess.Popen(
+            ffmpeg_command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding='utf-8',
+            errors='ignore',
+        )
         total_duration = self.get_video_duration(temp_output)
 
-        for line in process.stderr:
-            if "time=" in line:
-                try:
-                    time_str = line.split("time=")[1].split(" ")[0]
-                    h, m, s = map(float, time_str.split(":"))
-                    processed_time = h * 3600 + m * 60 + s
-                    if total_duration > 0:
-                        progress = (processed_time / total_duration) * 100
-                        yield progress
-                except Exception as e:
-                    print(f"解析进度时发生错误: {e}")
+        if process.stderr is not None:
+            for line in process.stderr:
+                if "time=" in line:
+                    try:
+                        time_str = line.split("time=")[1].split(" ")[0]
+                        h, m, s = map(float, time_str.split(":"))
+                        processed_time = h * 3600 + m * 60 + s
+                        if total_duration > 0:
+                            progress = (processed_time / total_duration) * 100
+                            yield max(0, min(100, progress))
+                    except Exception as e:
+                        print(f"Failed to parse ffmpeg progress: {e}")
 
-        process.wait()
+        return_code = process.wait()
+        if return_code != 0:
+            print(f"ffmpeg convert failed with code: {return_code}")
         yield 100
 
     def get_video_duration(self, path):

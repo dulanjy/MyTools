@@ -4,11 +4,15 @@ export class SocketService {
   private socket;
  
   constructor() {
-    this.socket = io('http://localhost:5000');
+    const socketBaseUrl = import.meta.env.VITE_FLASK_SOCKET_URL || 'http://localhost:5000';
+    this.socket = io(socketBaseUrl);
   }
  
   on(event: string, callback: Function) {
-    this.socket.on(event, (data) => callback(data.data));
+    this.socket.on(event, (data) => {
+      const normalized = data && typeof data === 'object' && 'data' in data ? (data as any).data : data;
+      callback(normalized);
+    });
   }
  
   emit(event: string, data: any) {

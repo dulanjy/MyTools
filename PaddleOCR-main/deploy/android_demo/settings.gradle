@@ -1,1 +1,23 @@
-include ':app'
+def resolveAndroidSdkDir() {
+    def localPropsFile = new File(rootDir, "local.properties")
+    if (localPropsFile.exists()) {
+        def props = new Properties()
+        localPropsFile.withInputStream { props.load(it) }
+        def fromLocal = props.getProperty("sdk.dir")
+        if (fromLocal && new File(fromLocal).exists()) {
+            return fromLocal
+        }
+    }
+    def fromEnv = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
+    if (fromEnv && new File(fromEnv).exists()) {
+        return fromEnv
+    }
+    return null
+}
+
+def sdkDir = resolveAndroidSdkDir()
+if (sdkDir != null) {
+    include ':app'
+} else {
+    println "[android_demo] Android SDK not found. Skip loading ':app' to avoid IDE import errors."
+}

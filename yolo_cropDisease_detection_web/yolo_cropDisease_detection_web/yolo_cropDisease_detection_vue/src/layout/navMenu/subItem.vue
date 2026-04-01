@@ -2,7 +2,7 @@
 	<template v-for="val in chils">
 		<el-sub-menu :index="val.path" :key="val.path" v-if="val.children && val.children.length > 0">
 			<template #title>
-				<SvgIcon :name="val.meta.icon" />
+				<SvgIcon :name="val.meta.icon" class="menu-icon" />
 				<span>{{ $t(val.meta.title) }}</span>
 			</template>
 			<sub-item :chil="val.children" />
@@ -10,12 +10,12 @@
 		<template v-else>
 			<el-menu-item :index="val.path" :key="val.path">
 				<template v-if="!val.meta.isLink || (val.meta.isLink && val.meta.isIframe)">
-					<SvgIcon :name="val.meta.icon" />
+					<SvgIcon :name="val.meta.icon" class="menu-icon" />
 					<span>{{ $t(val.meta.title) }}</span>
 				</template>
 				<template v-else>
 					<a class="w100" @click.prevent="onALinkClick(val)">
-						<SvgIcon :name="val.meta.icon" />
+						<SvgIcon :name="val.meta.icon" class="menu-icon" />
 						{{ $t(val.meta.title) }}
 					</a>
 				</template>
@@ -47,3 +47,14 @@ const onALinkClick = (val: RouteItem) => {
 	other.handleOpenLink(val);
 };
 </script>
+
+<style scoped lang="scss">
+:deep(.menu-icon) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px !important;
+	min-width: 16px !important;
+	margin-right: 8px !important;
+}
+</style>

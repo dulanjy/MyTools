@@ -103,6 +103,28 @@
 .el-sub-menu .fa {
 	@include mix.generalIcon;
 }
+// element-plus 图标在菜单中与 iconfont 保持一致的尺寸与对齐
+.el-menu-item .el-icon,
+.el-sub-menu .el-icon {
+	font-size: 14px !important;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	width: 24px;
+	height: 24px;
+	margin-right: 5px;
+	flex-shrink: 0;
+}
+// 折叠菜单时统一去掉图标右间距，避免图标偏移
+.el-menu--collapse .el-menu-item .el-icon,
+.el-menu--collapse .el-sub-menu__title .el-icon,
+.el-menu--collapse .el-menu-item .iconfont,
+.el-menu--collapse .el-sub-menu__title .iconfont,
+.el-menu--collapse .el-menu-item .fa,
+.el-menu--collapse .el-sub-menu__title .fa {
+	margin-right: 0 !important;
+}
 // 水平菜单、横向菜单高亮 背景色，鼠标 hover 时，有子级菜单的背景色
 .el-menu-item.is-active,
 .el-sub-menu.is-active .el-sub-menu__title,

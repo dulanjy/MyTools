@@ -21,12 +21,17 @@ public class BehaviorController {
 
     @GetMapping("/stats")
     public Map<String, Object> getStats() {
-        List<BehaviorRecord> records = behaviorMapper.selectList(new QueryWrapper<BehaviorRecord>().orderByAsc("record_time"));
-        
         Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", records);
+        try {
+            List<BehaviorRecord> records = behaviorMapper.selectList(new QueryWrapper<BehaviorRecord>().orderByAsc("record_time"));
+            result.put("code", 200);
+            result.put("msg", "success");
+            result.put("data", records);
+        } catch (Exception e) {
+            result.put("code", 200);
+            result.put("msg", "no data");
+            result.put("data", Collections.emptyList());
+        }
         return result;
     }
 

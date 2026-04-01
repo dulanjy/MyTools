@@ -1,1 +1,101 @@
-yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot/files/1de81c9140af49888e59b2390afbea10_1c421500ddd390c90596ad2cf12d5429_jpg.rf.b6d13f65fd8a775a28e73a06f4bda907.jpg
+# ------------------------------
+# OS junk
+# ------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ------------------------------
+# Editor / IDE
+# ------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Keep only shared VS Code workspace configs
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+.python-version
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.ipynb_checkpoints/
+
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------
+# Node / Frontend
+# ------------------------------
+**/node_modules/
+**/dist/
+**/.vite/
+*.tsbuildinfo
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.npm-cache/
+.npm/
+.pnpm-store/
+.yarn/
+
+# ------------------------------
+# Java / Maven / Gradle
+# ------------------------------
+**/target/
+**/.m2/
+**/.gradle/
+*.class
+*.jar
+*.war
+*.ear
+
+# ------------------------------
+# Runtime artifacts
+# ------------------------------
+**/runs/
+**/files/
+*.pid
+*.seed
+yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_flask/flask_dev*.log
+yolo_studentBehavior_detection_web/yolo_studentBehavior_detection_vue/vite_dev*.log
+
+# ------------------------------
+# Local env overrides
+# ------------------------------
+.env.local
+.env.*.local
+
+yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask/files
+yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask/runs
+yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_springboot/files/
+yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask/__pycache__
+yolo_cropDisease_detection_web/yolo_cropDisease_detection_web/yolo_cropDisease_detection_flask/predict/__pycache__/
+screen_capture/__pycache__/
+student_behavior_ai/__pycache__/

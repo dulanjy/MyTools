@@ -10,14 +10,14 @@
 		<template v-for="val in menuLists">
 			<el-sub-menu :index="val.path" v-if="val.children && val.children.length > 0" :key="val.path">
 				<template #title>
-					<SvgIcon :name="val.meta.icon" />
+					<SvgIcon :name="val.meta.icon" class="menu-icon" />
 					<span>{{ $t(val.meta.title) }}</span>
 				</template>
 				<SubItem :chil="val.children" />
 			</el-sub-menu>
 			<template v-else>
 				<el-menu-item :index="val.path" :key="val.path">
-					<SvgIcon :name="val.meta.icon" />
+					<SvgIcon :name="val.meta.icon" class="menu-icon" />
 					<template #title v-if="!val.meta.isLink || (val.meta.isLink && val.meta.isIframe)">
 						<span>{{ $t(val.meta.title) }}</span>
 					</template>
@@ -100,3 +100,14 @@ watch(
 	}
 );
 </script>
+
+<style scoped lang="scss">
+:deep(.menu-icon) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px !important;
+	min-width: 16px !important;
+	margin-right: 8px !important;
+}
+</style>

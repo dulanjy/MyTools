@@ -116,12 +116,24 @@ const signInSuccess = (isNoPower: boolean | undefined) => {
 		// 登录成功，跳到转首页
 		// 如果是复制粘贴的路径，非首页/登录页，那么登录成功后重定向到对应的路径中
 		if (route.query?.redirect) {
+			let redirectPath = <string>route.query?.redirect;
+			if (redirectPath === '/home') redirectPath = '/';
+			let redirectQuery = {};
+			const rawParams = route.query?.params;
+			if (typeof rawParams === 'string' && rawParams) {
+				try {
+					const parsed = JSON.parse(rawParams);
+					redirectQuery = parsed && typeof parsed === 'object' ? parsed : {};
+				} catch (error) {
+					redirectQuery = {};
+				}
+			}
 			router.push({
-				path: <string>route.query?.redirect,
-				query: Object.keys(<string>route.query?.params).length > 0 ? JSON.parse(<string>route.query?.params) : '',
+				path: redirectPath,
+				query: redirectQuery,
 			});
 		} else {
-			router.push('/');
+			router.push('/imgPredict');
 		}
 		// 登录成功提示
 		const signInText = t('message.signInText');

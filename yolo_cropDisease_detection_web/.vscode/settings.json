@@ -1,7 +1,19 @@
-{
-    "python-envs.defaultEnvManager": "ms-python.python:conda",
-    "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": [],
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive"
+﻿{
+    "python-envs.defaultEnvManager":  "ms-python.python:conda",
+    "python-envs.defaultPackageManager":  "ms-python.python:conda",
+    "python-envs.pythonProjects":  [
+
+                                   ],
+    "java.compile.nullAnalysis.mode":  "automatic",
+    "java.configuration.updateBuildConfiguration":  "disabled",
+    "java.import.exclusions":  [
+                                   "**/PaddleOCR-main/deploy/android_demo/**",
+                                   "**/deploy/android_demo/**"
+                               ],
+    "gradle.nestedProjects":  false,
+    "gradle.autoDetect":  "off",
+    "java.import.gradle.enabled":  false,
+    "java.import.maven.enabled": false,
+    "java.project.importOnFirstTimeStartup": "disabled",
+    "java.autobuild.enabled": false
 }

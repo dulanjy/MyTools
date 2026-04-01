@@ -1,63 +1,65 @@
-<template>
+﻿<template>
 	<div class="system-role-dialog-container">
 		<el-dialog :title="state.dialog.title" v-model="state.dialog.isShowDialog" width="800px" class="dia">
 			<div class="imgs">
 				<el-upload
-					v-model="state.form.avatar"
+					v-model:file-list="state.fileList"
 					ref="uploadFile"
 					class="avatar-uploader"
 					action="http://localhost:9999/files/upload"
 					:show-file-list="false"
-					:on-success="handleAvatarSuccessone"
+					:on-success="handleAvatarSuccess"
 				>
-					<img v-if="imageUrl" :src="imageUrl" class="avatar" />
-					<el-icon v-if="!imageUrl"><Plus /></el-icon>
+					<img v-if="imageUrl" :src="imageUrl" class="avatar" alt="avatar" />
+					<el-icon v-else><Plus /></el-icon>
 				</el-upload>
 			</div>
+
 			<el-form ref="roleDialogFormRef" :model="state.form" size="default" label-width="100px">
 				<el-row :gutter="35">
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="账号" style="color: #000">
-							<el-input v-model="state.form.username" placeholder="请输入账号" clearable></el-input>
+						<el-form-item label="账号">
+							<el-input v-model="state.form.username" placeholder="请输入账号" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
 						<el-form-item label="密码">
-							<el-input v-model="state.form.password" placeholder="请输入密码" clearable></el-input>
+							<el-input v-model="state.form.password" placeholder="请输入密码" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="姓名" style="color: #000">
-							<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
+						<el-form-item label="姓名">
+							<el-input v-model="state.form.name" placeholder="请输入姓名" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
 						<el-form-item label="性别">
-							<el-input v-model="state.form.sex" placeholder="请输入性别" clearable></el-input>
+							<el-input v-model="state.form.sex" placeholder="请输入性别" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="Email">
-							<el-input v-model="state.form.email" placeholder="请输入Email" clearable></el-input>
+						<el-form-item label="邮箱">
+							<el-input v-model="state.form.email" placeholder="请输入邮箱" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="手机号码">
-							<el-input v-model="state.form.tel" placeholder="请输入手机号码" clearable></el-input>
+						<el-form-item label="手机号">
+							<el-input v-model="state.form.tel" placeholder="请输入手机号" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
 						<el-form-item label="角色">
-							<el-select v-model="state.form.role" value-key="id" placeholder="请选择注册角色" style="width: 100%">
-								<el-option v-for="item in option" :key="item.id" :label="item.label" :value="item.role" />
+							<el-select v-model="state.form.role" value-key="id" placeholder="请选择角色" style="width: 100%">
+								<el-option v-for="item in roleOptions" :key="item.id" :label="item.label" :value="item.role" />
 							</el-select>
 						</el-form-item>
 					</el-col>
 				</el-row>
 			</el-form>
+
 			<template #footer>
 				<span class="dialog-footer">
-					<el-button @click="onCancel" size="default">取 消</el-button>
+					<el-button @click="onCancel" size="default">取消</el-button>
 					<el-button type="primary" @click="onSubmit" size="default">{{ state.dialog.submitTxt }}</el-button>
 				</span>
 			</template>
@@ -66,38 +68,40 @@
 </template>
 
 <script setup lang="ts" name="systemRoleDialog">
-import { nextTick, computed, reactive, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import type { UploadInstance, UploadProps } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import request from '/@/utils/request';
 
-// 定义子组件向父组件传值/事件
 const emit = defineEmits(['refresh']);
 
 const imageUrl = ref('');
 const uploadFile = ref<UploadInstance>();
+const roleDialogFormRef = ref();
+const isSuccess = (code: unknown) => String(code) === '0';
 
-const handleAvatarSuccessone: UploadProps['onSuccess'] = (response, uploadFile) => {
-	console.log(response);
-	imageUrl.value = URL.createObjectURL(uploadFile.raw!);
-	state.form.avatar = response.data;
-};
-
-const option = [
+const roleOptions = [
 	{ id: 1, label: '管理员', role: 'admin' },
 	{ id: 2, label: '普通用户', role: 'common' },
+	{ id: 3, label: '其他用户', role: 'others' },
 ];
 
-// 定义变量内容
-const roleDialogFormRef = ref();
+const getEmptyForm = () => ({
+	id: undefined,
+	username: '',
+	password: '',
+	name: '',
+	sex: '',
+	email: '',
+	tel: '',
+	role: 'common',
+	avatar: '',
+});
+
 const state = reactive({
-	form: {} as any,
-	menuData: [] as TreeType[],
-	menuProps: {
-		children: 'children',
-		label: 'label',
-	},
+	form: getEmptyForm() as any,
+	fileList: [] as any[],
 	dialog: {
 		isShowDialog: false,
 		type: '',
@@ -106,75 +110,76 @@ const state = reactive({
 	},
 });
 
-// 打开弹窗
-const openDialog = (type: string, row: RowRoleType) => {
-	if (type === 'edit') {
-		state.form = row;
-		state.dialog.title = '修改信息';
-		state.dialog.submitTxt = '修 改';
-		imageUrl.value = state.form.avatar;
+const handleAvatarSuccess: UploadProps['onSuccess'] = (response: any, file) => {
+	imageUrl.value = URL.createObjectURL(file.raw!);
+	state.form.avatar = response?.data || '';
+};
+
+const openDialog = (type: string, row?: RowRoleType) => {
+	state.dialog.type = type;
+	if (type === 'edit' && row) {
+		state.form = { ...getEmptyForm(), ...row };
+		state.dialog.title = '修改用户';
+		state.dialog.submitTxt = '保存';
+		imageUrl.value = state.form.avatar || '';
 	} else {
-		state.dialog.title = '新增信息';
-		state.dialog.submitTxt = '新 增';
-		// 清空表单，此项需加表单验证才能使用
+		state.form = getEmptyForm();
+		state.dialog.title = '新增用户';
+		state.dialog.submitTxt = '新增';
 		nextTick(() => {
-			uploadFile.value!.clearFiles(); //该方法就是清理上传列表
+			uploadFile.value?.clearFiles();
 			imageUrl.value = '';
 		});
 	}
 	state.dialog.isShowDialog = true;
 };
-// 关闭弹窗
+
 const closeDialog = () => {
 	state.dialog.isShowDialog = false;
 };
-// 取消
+
 const onCancel = () => {
 	closeDialog();
 };
-// 提交
+
+const normalizeRole = (role: string) => {
+	if (role === '管理员') return 'admin';
+	if (role === '普通用户') return 'common';
+	if (role === '其他用户') return 'others';
+	return role;
+};
+
 const onSubmit = () => {
-	if (state.form['role'] == '管理员') {
-		state.form['role'] = 'admin';
-	} else if (state.form['role'] == '普通用户') {
-		state.form['role'] = 'common';
-	} else if (state.form['role'] == '其他用户') {
-		state.form['role'] = 'others';
-	}
-	if (state.dialog.title == '修改信息') {
+	state.form.role = normalizeRole(state.form.role);
+
+	if (state.dialog.type === 'edit') {
 		request.post('/api/user/update', state.form).then((res) => {
-			if (res.code == 0) {
-				ElMessage.success('修改成功！');
+			if (isSuccess(res?.code)) {
+				ElMessage.success('修改成功');
 				setTimeout(() => {
 					closeDialog();
 					emit('refresh');
-				}, 500);
+				}, 300);
 			} else {
-				ElMessage({
-					type: 'error',
-					message: res.msg,
-				});
+				ElMessage.error(String(res?.msg || '修改失败'));
 			}
 		});
-	} else {
-		request.post('/api/user/', state.form).then((res) => {
-			if (res.code == 0) {
-				ElMessage.success('添加成功！');
-			} else {
-				ElMessage({
-					type: 'error',
-					message: res.msg,
-				});
-			}
-			setTimeout(() => {
-				closeDialog();
-				emit('refresh');
-			}, 500);
-		});
+		return;
 	}
+
+	request.post('/api/user/', state.form).then((res) => {
+		if (isSuccess(res?.code)) {
+			ElMessage.success('新增成功');
+		} else {
+			ElMessage.error(String(res?.msg || '新增失败'));
+		}
+		setTimeout(() => {
+			closeDialog();
+			emit('refresh');
+		}, 300);
+	});
 };
 
-// 暴露变量
 defineExpose({
 	openDialog,
 });
@@ -213,9 +218,11 @@ defineExpose({
 .avatar-uploader .el-upload:hover {
 	border-color: #409eff;
 }
+
 .avatar {
 	width: 120px;
 	height: 120px;
 	display: block;
+	object-fit: cover;
 }
 </style>

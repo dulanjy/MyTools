@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 @ConditionalOnProperty(name = "app.db.enabled", havingValue = "true")
@@ -35,7 +36,9 @@ public class ImgRecordsController {
                               @RequestParam(defaultValue = "") String search,
                               @RequestParam(defaultValue = "") String search1,
                               @RequestParam(defaultValue = "") String search3,
-                              @RequestParam(defaultValue = "") String search2) {
+                              @RequestParam(defaultValue = "") String search2,
+                              @RequestParam(defaultValue = "") String startTimeFrom,
+                              @RequestParam(defaultValue = "") String startTimeTo) {
         LambdaQueryWrapper<ImgRecords> wrapper = Wrappers.<ImgRecords>lambdaQuery();
         wrapper.orderByDesc(ImgRecords::getStartTime);
         if (StrUtil.isNotBlank(search)) {
@@ -50,6 +53,12 @@ public class ImgRecordsController {
         if (StrUtil.isNotBlank(search3)) {
             wrapper.like(ImgRecords::getConf, search3);
         }
+        if (StrUtil.isNotBlank(startTimeFrom)) {
+            wrapper.ge(ImgRecords::getStartTime, startTimeFrom);
+        }
+        if (StrUtil.isNotBlank(startTimeTo)) {
+            wrapper.le(ImgRecords::getStartTime, startTimeTo);
+        }
         Page<ImgRecords> Page = imgRecordsMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         return Result.success(Page);
     }
@@ -57,6 +66,15 @@ public class ImgRecordsController {
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable int id) {
         imgRecordsMapper.deleteById(id);
+        return Result.success();
+    }
+
+    @PostMapping("/batchDelete")
+    public Result<?> batchDelete(@RequestBody List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success();
+        }
+        imgRecordsMapper.deleteBatchIds(ids);
         return Result.success();
     }
 
