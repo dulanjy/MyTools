@@ -1,26 +1,11 @@
-﻿{
+{
     "python-envs.defaultEnvManager":  "ms-python.python:conda",
     "python-envs.defaultPackageManager":  "ms-python.python:conda",
     "python-envs.pythonProjects":  [
 
                                    ],
     "cmake.ignoreCMakeListsMissing":  true,
-    "sqltools.connections":  [
-                                 {
-                                     "mysqlOptions":  {
-                                                          "authProtocol":  "default",
-                                                          "enableSsl":  "Disabled"
-                                                      },
-                                     "ssh":  "Disabled",
-                                     "previewLimit":  50,
-                                     "server":  "localhost",
-                                     "port":  3306,
-                                     "driver":  "MySQL",
-                                     "name":  "localhost_dev",
-                                     "database":  "cropdisease",
-                                     "username":  "root"
-                                 }
-                             ],
+    "sqltools.connections":  [],
     "git.ignoreLimitWarning":  true,
     "java.import.exclusions":  [
                                    "**/PaddleOCR-main/deploy/android_demo/**",

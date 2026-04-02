@@ -49,13 +49,15 @@
         {
             "label": "start:mysql",
             "type": "process",
-            "command": "cmd.exe",
+            "command": "powershell",
             "args": [
-                "/d",
-                "/c",
-                "mysqld --console"
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/start-mysql.ps1"
             ],
-            "isBackground": true,
+            "isBackground": false,
             "problemMatcher": []
         },
         {

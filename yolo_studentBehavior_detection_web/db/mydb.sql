@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.4.6, for Win64 (x86_64)
 --
--- Host: localhost    Database: cropdisease
+-- Host: localhost    Database: student_behavior
 -- ------------------------------------------------------
 -- Server version	8.4.6
 
