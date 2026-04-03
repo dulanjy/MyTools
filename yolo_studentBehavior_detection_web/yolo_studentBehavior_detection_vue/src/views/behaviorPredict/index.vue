@@ -60,6 +60,14 @@
 						<span>⬇️ 下载JSON</span>
 				</el-button>
 			</div>
+			<div class="analysis-progress-panel" v-if="isAnalyzing">
+				<div class="analysis-progress-head">
+					<span>AI 分析进行中</span>
+					<span>{{ analysisProgress }}%</span>
+				</div>
+				<el-progress :percentage="analysisProgress" :stroke-width="12" :show-text="false" />
+				<div class="analysis-progress-tip">{{ analysisProgressText }}</div>
+			</div>
 
 				<!-- 结果区 -->
 			<div class="result-section" v-if="result">
@@ -208,6 +216,9 @@ const countsWeight = ref('');
 const preferManualAnalysis = ref(false);
 const manualAnalysisJsonPath = ref('');
 const isLoading = ref(false);
+const isAnalyzing = ref(false);
+const analysisProgress = ref(0);
+let analysisProgressTimer: number | null = null;
 const state = reactive({
 	img: '',
 	weight_items: [] as any[],
@@ -274,6 +285,12 @@ const analysisCounts = ref<Record<string, unknown>>({});
 const savedBehaviorPath = ref<string>('');
 const savedAnalysisJsonPath = ref<string>('');
 const analysisJsonText = computed(() => (analysisJson.value ? JSON.stringify(analysisJson.value, null, 2) : ''));
+const analysisProgressText = computed(() => {
+	if (analysisProgress.value < 30) return '正在读取检测结果并准备分析';
+	if (analysisProgress.value < 65) return '正在调用 AI 模型生成结构化报告';
+	if (analysisProgress.value < 90) return '正在整理报告内容并渲染';
+	return '即将完成';
+});
 const sectionMeta: Record<string, { title: string; span: number; priority: number }> = {
 	summary: { title: '课堂概述', span: 6, priority: 1 },
 	metrics: { title: '核心指标', span: 6, priority: 2 },
@@ -517,6 +534,51 @@ const normalizeCountMap = (value: unknown) => {
 		out[key] = (out[key] || 0) + extractCountValue(v);
 	});
 	return out;
+};
+
+const fixMojibake = (text: string) => {
+	if (!text) return text;
+	return text
+		.replace(/璇惧爞琛屼负鍒嗘瀽/g, '课堂行为分析')
+		.replace(/鍏抽敭瑙傚療瑕佺偣/g, '关键观察要点')
+		.replace(/灞€闄愭€э?/g, '局限性')
+		.replace(/浜烘暟/g, '人数')
+		.replace(/鍩轰簬杈撳叆璁℃暟涓庣┖闂村垎甯冪殑鑷姩鏁寸悊锛屽彲鑳戒笌瀹為檯瀛樺湪鍋忓樊/g, '基于输入计数与空间分布的自动整理，可能与实际存在偏差');
+};
+
+const applyAnalysisResult = (res: any) => {
+	analysisMarkdown.value = fixMojibake(String(res.analysis_markdown || ''));
+	analysisJson.value = res.analysis_json || null;
+	analysisCounts.value = normalizeCountMap(res.counts || {});
+};
+
+const clearAnalysisProgressTimers = () => {
+	if (analysisProgressTimer !== null) {
+		clearInterval(analysisProgressTimer);
+		analysisProgressTimer = null;
+	}
+};
+
+const startAnalysisProgress = () => {
+	clearAnalysisProgressTimers();
+	isAnalyzing.value = true;
+	analysisProgress.value = 6;
+	analysisProgressTimer = window.setInterval(() => {
+		const step = analysisProgress.value < 45 ? 5 : analysisProgress.value < 75 ? 3 : 1;
+		analysisProgress.value = Math.min(92, analysisProgress.value + step);
+	}, 800);
+};
+
+const stopAnalysisProgress = (ok: boolean) => {
+	clearAnalysisProgressTimers();
+	if (ok) {
+		analysisProgress.value = 100;
+		window.setTimeout(() => {
+			isAnalyzing.value = false;
+		}, 400);
+		return;
+	}
+	isAnalyzing.value = false;
 };
 
 const originalPreviewUrl = computed(() => {
@@ -1296,9 +1358,12 @@ const runDual = () => {
 
 const runAnalyze = () => {
 	if (!state.img) return ElMessage.warning('请先上传图片');
+	isLoading.value = true;
+	startAnalysisProgress();
 	const wantOrt = (behaviorWeight.value || '').toLowerCase().endsWith('.onnx');
 	// 1) 若勾选“使用指定AI化JSON”，则直接复用该JSON
 	if (preferManualAnalysis.value && manualAnalysisJsonPath.value) {
+		let ok = false;
 		const payloadReuseDirect: any = {
 			analysis_json_path: manualAnalysisJsonPath.value,
 			title: '课堂行为分析',
@@ -1307,10 +1372,9 @@ const runAnalyze = () => {
 			.post('/flask/analyze', payloadReuseDirect)
 			.then((res) => {
 				if (res.status === 200) {
-					analysisMarkdown.value = res.analysis_markdown || '';
-					analysisJson.value = res.analysis_json || null;
-					analysisCounts.value = normalizeCountMap(res.counts || {});
+					applyAnalysisResult(res);
 					savedAnalysisJsonPath.value = res.saved_analysis_json_path || manualAnalysisJsonPath.value;
+					ok = true;
 					ElMessage.success('分析完成(使用指定AI化JSON)');
 				} else {
 					ElMessage.error(res.message || '分析失败');
@@ -1319,10 +1383,12 @@ const runAnalyze = () => {
 			.catch((e) => ElMessage.error(String(e)))
 			.finally(() => {
 				isLoading.value = false;
+				stopAnalysisProgress(ok);
 			});
 	}
 	// 若已有已AI化的 JSON，优先直接复用，避免重复调用模型
 	if (savedAnalysisJsonPath.value) {
+		let ok = false;
 		const payloadReuse: any = {
 			analysis_json_path: savedAnalysisJsonPath.value,
 			title: '课堂行为分析',
@@ -1332,11 +1398,10 @@ const runAnalyze = () => {
 			.post('/flask/analyze', payloadReuse)
 			.then((res) => {
 				if (res.status === 200) {
-					analysisMarkdown.value = res.analysis_markdown || '';
-					analysisJson.value = res.analysis_json || null;
-					analysisCounts.value = normalizeCountMap(res.counts || {});
+					applyAnalysisResult(res);
 					// 维持当前 savedAnalysisJsonPath（或更新为后端返回路径）
 					savedAnalysisJsonPath.value = res.saved_analysis_json_path || savedAnalysisJsonPath.value;
+					ok = true;
 					ElMessage.success('分析完成(复用)');
 				} else {
 					ElMessage.error(res.message || '分析失败');
@@ -1345,6 +1410,7 @@ const runAnalyze = () => {
 			.catch((e) => ElMessage.error(String(e)))
 			.finally(() => {
 				isLoading.value = false;
+				stopAnalysisProgress(ok);
 			});
 	}
 	// 若尚未运行双模型检测，则先跑一遍保证严格流程
@@ -1371,6 +1437,7 @@ const runAnalyze = () => {
 
 	ensureDual()
 		.then(() => {
+			let ok = false;
 			// 严格流程：仅用 behavior_json_path 驱动 AI 化与可视化
 			const payload: any = {
 				two_stage: true,
@@ -1396,10 +1463,9 @@ const runAnalyze = () => {
 				.post('/flask/analyze', payload)
 				.then((res) => {
 					if (res.status === 200) {
-						analysisMarkdown.value = res.analysis_markdown || '';
-						analysisJson.value = res.analysis_json || null;
-						analysisCounts.value = normalizeCountMap(res.counts || {});
+						applyAnalysisResult(res);
 						savedAnalysisJsonPath.value = res.saved_analysis_json_path || '';
+						ok = true;
 						ElMessage.success('分析完成');
 					} else {
 						ElMessage.error(res.message || '分析失败');
@@ -1408,11 +1474,13 @@ const runAnalyze = () => {
 				.catch((e) => ElMessage.error(String(e)))
 				.finally(() => {
 					isLoading.value = false;
+					stopAnalysisProgress(ok);
 				});
 		})
 		.catch((e: any) => {
 			ElMessage.error(String(e));
 			isLoading.value = false;
+			stopAnalysisProgress(false);
 		});
 };
 
@@ -1452,6 +1520,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	cancelPendingVisualizationInit();
 	window.removeEventListener('resize', resizeVisualizationCharts);
+	clearAnalysisProgressTimers();
 	disposeVisualizationCharts();
 });
 </script>
@@ -2072,6 +2141,29 @@ onBeforeUnmount(() => {
 
 .button-bar .json-path-input {
 	min-width: 220px !important;
+}
+
+.analysis-progress-panel {
+	padding: 14px 18px;
+	border-radius: 14px;
+	border: 1px solid rgba(15, 118, 110, 0.2);
+	background: rgba(255, 255, 255, 0.9);
+	box-shadow: var(--tech-shadow-sm);
+}
+
+.analysis-progress-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+	font-weight: 700;
+	color: #0f766e;
+}
+
+.analysis-progress-tip {
+	margin-top: 8px;
+	font-size: 13px;
+	color: #4b5563;
 }
 
 .upload-file-tag {

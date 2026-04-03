@@ -335,7 +335,7 @@ class VideoProcessingApp:
             vis_path = './runs/result.jpg'
             res = det.predict_image(img_path, conf=conf, save_vis_path=vis_path)
         except Exception as e:
-            return jsonify({'status': 400, 'message': f'棰勬祴澶辫触: {e}'})
+            return jsonify({'status': 400, 'message': f'预测失败: {e}'})
 
         uploadedUrl = None
         try:
@@ -358,7 +358,7 @@ class VideoProcessingApp:
 
         out = {
             'status': 200,
-            'message': '棰勬祴鎴愬姛',
+            'message': '预测成功',
             'outImg': uploadedUrl or os.path.abspath('./runs/result.jpg'),
             'allTime': f"{res.time.get('total', 0):.3f}s",
             'detections': res.detections,
@@ -456,7 +456,7 @@ class VideoProcessingApp:
         counts = merged.get('counts') or {}
         if not isinstance(counts, dict):
             counts = {}
-        student_count = int(merged.get('head') or merged.get('浜烘暟') or 0)
+        student_count = int(merged.get('head') or merged.get('人数') or 0)
         if student_count <= 0:
             try:
                 student_count = sum(int(v) for v in counts.values() if isinstance(v, (int, float)))
@@ -584,7 +584,7 @@ class VideoProcessingApp:
         save_json_out = bool(data.get('save_json_out', False))
         out_dir_req = data.get('out_dir') or None
         out_stem_req = data.get('out_stem') or None
-        title_req = data.get('title') or '璇惧爞琛屼负鍒嗘瀽'
+        title_req = data.get('title') or '课堂行为分析'
         aiize_mode = False
         backend = (data.get('backend') or '').lower().strip()
         if not backend and weight:
@@ -636,10 +636,10 @@ class VideoProcessingApp:
                         if not isinstance(obs, list) or len(obs) == 0:
                             mt = js.get('metrics') or {}
                             sp = (js.get('spatial') or {}).get('grid3x3') or None
-                            head_v = js.get('head') or js.get('浜烘暟')
+                            head_v = js.get('head') or js.get('人数')
                             bullets = []
                             if isinstance(head_v, int) and head_v > 0:
-                                bullets.append(f'浜烘暟 {head_v}')
+                                bullets.append(f'人数 {head_v}')
                             try:
                                 if isinstance(mt.get('head_down_rate'), int):
                                     bullets.append(f'浣庡ご鐜囩害 {mt.get("head_down_rate")}%' )
@@ -690,7 +690,7 @@ class VideoProcessingApp:
             result_markdown = None
             try:
                 if markdown_from_ai_json is not None and isinstance(result_json, dict):
-                    result_markdown = markdown_from_ai_json(result_json, title='璇惧爞琛屼负鍒嗘瀽')
+                    result_markdown = markdown_from_ai_json(result_json, title='课堂行为分析')
             except Exception:
                 pass
             # 淇濆瓨鍙傝€?JSON锛堝熀浜庡鐢級
@@ -762,7 +762,7 @@ class VideoProcessingApp:
                 for k, v in res.counts.items():
                     counts[k] = counts.get(k, 0) + int(v)
             except Exception as e:
-                return jsonify({'status': 400, 'message': f'妫€娴嬪け璐? {e}'})
+                return jsonify({'status': 400, 'message': f'检测失败: {e}'})
 
         # 鑻ュ浜?AI 鍖栫幇鏈?JSON 妯″紡锛坆ehavior_json_path/behavior_json锛夛紝鍒欏皢鍏朵腑鐨?counts/boxes/size 娉ㄥ叆锛?
         # 浠ヤ究鍚庣画瀵屽寲/鍏滃簳锛堝惁鍒欎細鍑虹幇 metrics=0銆乸er_class 涓虹┖绛夐棶棰橈級銆?
@@ -866,7 +866,7 @@ class VideoProcessingApp:
                         except Exception:
                             result_json = None
 
-                        # 涓板瘜涓庝竴鑷存€у鐞嗭細纭繚 head/浜烘暟銆佷竴鑷寸殑 provenance
+                        # 涓板瘜涓庝竴鑷存€у鐞嗭細纭繚 head/人数銆佷竴鑷寸殑 provenance
                         try:
                             if result_json is not None and isinstance(result_json, dict):
                                 # 鑻ョ己灏?head锛屽垯灏濊瘯浠庡師 JSON 鎺ㄦ柇
@@ -886,10 +886,10 @@ class VideoProcessingApp:
                                             result_json['head'] = h
                                     except Exception:
                                         pass
-                                # 浜烘暟鍒悕
+                                # 人数鍒悕
                                 try:
                                     if 'head' in result_json:
-                                        result_json['浜烘暟'] = int(result_json['head'])
+                                        result_json['人数'] = int(result_json['head'])
                                 except Exception:
                                     pass
                                 # provenance
@@ -918,7 +918,7 @@ class VideoProcessingApp:
                                     os.makedirs('./files', exist_ok=True)
                                     img_name = f"analysis_{uuid.uuid4().hex}.png"
                                     out_path = os.path.join('./files', img_name)
-                                    render_report_image(result_json, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                    render_report_image(result_json, out_path, title='课堂行为分析')
                                     result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                             except Exception:
                                 result_image_url = None
@@ -926,7 +926,7 @@ class VideoProcessingApp:
                         # 娓叉煋 Markdown锛堣嫢鍙锛?
                         if result_json is not None and markdown_from_ai_json is not None:
                             # 浣跨敤鏈湴妯℃澘娓叉煋绠€娲佹爣棰?
-                            result_markdown = markdown_from_ai_json(result_json, title='璇惧爞琛屼负鍒嗘瀽')
+                            result_markdown = markdown_from_ai_json(result_json, title='课堂行为分析')
                         else:
                             # 涓ユ牸妯″紡锛氫笉鐩存帴閲囩敤 AI 鍘熷鏂囨湰锛涘厛灏濊瘯浠庢枃鏈腑鎻愬彇 JSON锛屽惁鍒欑敓鎴愭湰鍦板洖閫€ JSON
                             result_markdown = None
@@ -980,7 +980,7 @@ class VideoProcessingApp:
                                             os.makedirs('./files', exist_ok=True)
                                             img_name = f"analysis_{uuid.uuid4().hex}.png"
                                             out_path = os.path.join('./files', img_name)
-                                            render_report_image(parsed, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                            render_report_image(parsed, out_path, title='课堂行为分析')
                                             result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                                             result_json = parsed
                                         except Exception:
@@ -988,7 +988,7 @@ class VideoProcessingApp:
                                     # 娓叉煋 Markdown锛堣嫢妯℃澘鍙敤锛?
                                     try:
                                         if markdown_from_ai_json is not None:
-                                            result_markdown = markdown_from_ai_json(parsed, title='璇惧爞琛屼负鍒嗘瀽')
+                                            result_markdown = markdown_from_ai_json(parsed, title='课堂行为分析')
                                     except Exception:
                                         pass
                                 # 鑻ヤ粛鏃?JSON锛岀敓鎴愬熀浜?counts 鐨勫洖閫€鍙鍖?
@@ -1009,21 +1009,21 @@ class VideoProcessingApp:
                                             head_est = None
                                         fallback = {
                                             'schema_version': '1.1',
-                                            'summary': '鍩轰簬璁℃暟涓庣┖闂村垎甯冪殑姒傝',
+                                            'summary': '基于计数与空间分布的概览',
                                             'observations': [],
                                             'metrics': derive_metrics(c_norm, head_est) if derive_metrics else {},
                                             'per_class': {k: {'count': int(v)} for k, v in (c_norm or {}).items()},
                                             'spatial': sp or {},
-                                            'limitations': ['鍩轰簬杈撳叆璁℃暟涓庣┖闂村垎甯冪殑鑷姩鏁寸悊锛屽彲鑳戒笌瀹為檯瀛樺湪鍋忓樊'],
+                                            'limitations': ['基于输入计数与空间分布的自动整理，可能与实际存在偏差'],
                                             'confidence': 'low',
                                             'source': {'image_path': img_path or '', 'image_size': {'width': int((img_size or [0,0])[0] or 0), 'height': int((img_size or [0,0])[1] or 0)}},
                                             'provenance': {'generated_by': 'local_postprocess'}
                                         }
-                                        # 娉ㄥ叆 head/浜烘暟 骞惰繘琛屽瘜鍖栵紝灏介噺濉厖 observations/limitations
+                                        # 娉ㄥ叆 head/人数 骞惰繘琛屽瘜鍖栵紝灏介噺濉厖 observations/limitations
                                         try:
                                             if head_est is not None:
                                                 fallback['head'] = int(head_est)
-                                                fallback['浜烘暟'] = int(head_est)
+                                                fallback['人数'] = int(head_est)
                                         except Exception:
                                             pass
                                         try:
@@ -1034,7 +1034,7 @@ class VideoProcessingApp:
                                         os.makedirs('./files', exist_ok=True)
                                         img_name = f"analysis_{uuid.uuid4().hex}.png"
                                         out_path = os.path.join('./files', img_name)
-                                        render_report_image(fallback, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                        render_report_image(fallback, out_path, title='课堂行为分析')
                                         result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                                         result_json = fallback
                                     except Exception:
@@ -1046,7 +1046,7 @@ class VideoProcessingApp:
                                 if result_json is not None and isinstance(result_json, dict):
                                     try:
                                         if markdown_from_ai_json is not None:
-                                            result_markdown = markdown_from_ai_json(result_json, title='璇惧爞琛屼负鍒嗘瀽')
+                                            result_markdown = markdown_from_ai_json(result_json, title='课堂行为分析')
                                         else:
                                             result_markdown = json.dumps(result_json, ensure_ascii=False, indent=2)
                                     except Exception:
@@ -1180,10 +1180,10 @@ class VideoProcessingApp:
                                         if not isinstance(obs, list) or len(obs) == 0:
                                             mt = js.get('metrics') or {}
                                             sp = (js.get('spatial') or {}).get('grid3x3') or None
-                                            head_v = js.get('head') or js.get('浜烘暟')
+                                            head_v = js.get('head') or js.get('人数')
                                             bullets = []
                                             if isinstance(head_v, int) and head_v > 0:
-                                                bullets.append(f'浜烘暟 {head_v}')
+                                                bullets.append(f'人数 {head_v}')
                                             try:
                                                 if isinstance(mt.get('head_down_rate'), int):
                                                     bullets.append(f'浣庡ご鐜囩害 {mt.get("head_down_rate")}%' )
@@ -1223,14 +1223,14 @@ class VideoProcessingApp:
                                     os.makedirs('./files', exist_ok=True)
                                     img_name = f"analysis_{uuid.uuid4().hex}.png"
                                     out_path = os.path.join('./files', img_name)
-                                    render_report_image(result_json, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                    render_report_image(result_json, out_path, title='课堂行为分析')
                                     result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                             except Exception:
                                 result_image_url = None
 
                         # 4) 鏈湴妯℃澘娓叉煋 Markdown锛堣嫢鍙敤锛夛紱涓ユ牸妯″紡涓嬩笉鐩存帴杩斿洖 AI 鏂囨湰
                         if result_json is not None and markdown_from_ai_json is not None:
-                            result_markdown = markdown_from_ai_json(result_json, title='璇惧爞琛屼负鍒嗘瀽')
+                            result_markdown = markdown_from_ai_json(result_json, title='课堂行为分析')
                         elif result_json is not None:
                             # 閫€鍥炰负 JSON 鏂囨湰
                             try:
@@ -1315,7 +1315,7 @@ class VideoProcessingApp:
                                         os.makedirs('./files', exist_ok=True)
                                         img_name = f"analysis_{uuid.uuid4().hex}.png"
                                         out_path = os.path.join('./files', img_name)
-                                        render_report_image(parsed, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                        render_report_image(parsed, out_path, title='课堂行为分析')
                                         result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                                         result_json = parsed
                                     except Exception:
@@ -1337,21 +1337,21 @@ class VideoProcessingApp:
                                         head_est = None
                                     fallback = {
                                         'schema_version': '1.1',
-                                        'summary': '鍩轰簬璁℃暟涓庣┖闂村垎甯冪殑姒傝',
+                                        'summary': '基于计数与空间分布的概览',
                                         'observations': [],
                                         'metrics': derive_metrics(c_norm, head_est) if derive_metrics else {},
                                         'per_class': {k: {'count': int(v)} for k, v in (c_norm or {}).items()},
                                         'spatial': sp or {},
-                                        'limitations': ['鍩轰簬杈撳叆璁℃暟涓庣┖闂村垎甯冪殑鑷姩鏁寸悊锛屽彲鑳戒笌瀹為檯瀛樺湪鍋忓樊'],
+                                        'limitations': ['基于输入计数与空间分布的自动整理，可能与实际存在偏差'],
                                         'confidence': 'low',
                                         'source': {'image_path': img_path or '', 'image_size': {'width': int((img_size or [0,0])[0] or 0), 'height': int((img_size or [0,0])[1] or 0)}},
                                         'provenance': {'generated_by': 'local_postprocess'}
                                     }
-                                    # 娉ㄥ叆 head/浜烘暟 骞惰繘琛屽瘜鍖栵紝灏介噺濉厖 observations/limitations
+                                    # 娉ㄥ叆 head/人数 骞惰繘琛屽瘜鍖栵紝灏介噺濉厖 observations/limitations
                                     try:
                                         if head_est is not None:
                                             fallback['head'] = int(head_est)
-                                            fallback['浜烘暟'] = int(head_est)
+                                            fallback['人数'] = int(head_est)
                                     except Exception:
                                         pass
                                     try:
@@ -1362,7 +1362,7 @@ class VideoProcessingApp:
                                     os.makedirs('./files', exist_ok=True)
                                     img_name = f"analysis_{uuid.uuid4().hex}.png"
                                     out_path = os.path.join('./files', img_name)
-                                    render_report_image(fallback, out_path, title='璇惧爞琛屼负鍒嗘瀽')
+                                    render_report_image(fallback, out_path, title='课堂行为分析')
                                     result_image_url = f"http://localhost:{self.port}/files/{img_name}"
                                     result_json = fallback
                                 except Exception:
@@ -1374,7 +1374,7 @@ class VideoProcessingApp:
                             if result_json is not None and isinstance(result_json, dict):
                                 try:
                                     if markdown_from_ai_json is not None:
-                                        result_markdown = markdown_from_ai_json(result_json, title='璇惧爞琛屼负鍒嗘瀽')
+                                        result_markdown = markdown_from_ai_json(result_json, title='课堂行为分析')
                                     else:
                                         result_markdown = json.dumps(result_json, ensure_ascii=False, indent=2)
                                 except Exception:
@@ -1495,7 +1495,7 @@ class VideoProcessingApp:
                     student_count = int(
                         result_json.get('head')
                         or result_json.get('person_count')
-                        or result_json.get('浜烘暟')
+                        or result_json.get('人数')
                         or metrics.get('student_count')
                         or 0
                     )
@@ -1520,7 +1520,7 @@ class VideoProcessingApp:
 
         return jsonify({
             'status': 200,
-            'message': '鍒嗘瀽瀹屾垚',
+            'message': '分析完成',
             'counts': counts,
             'detections': boxes,
             'image_size': list(img_size) if img_size else None,
@@ -1546,7 +1546,7 @@ class VideoProcessingApp:
         "save_json": false,
         "out_dir": "runs/dual_detect"
         }
-    杩斿洖锛歮erged JSON銆傝嫢 save_json=true锛屼粎鍐欏叆 *_behavior.json锛堝叾涓?counts 宸插惈 head 浜烘暟锛夈€?
+    杩斿洖锛歮erged JSON銆傝嫢 save_json=true锛屼粎鍐欏叆 *_behavior.json锛堝叾涓?counts 宸插惈 head 人数锛夈€?
         """
         data = request.get_json(force=True, silent=True) or {}
         img_path = self._localize_image_path(data.get('inputImg'))
@@ -1615,7 +1615,7 @@ class VideoProcessingApp:
                     # 浠呰涓虹被鍒鏁帮紝鍘婚櫎 head锛岄伩鍏嶉噸澶嶏紱椤跺眰鎻愪緵鍞竴鐨?head
                     'counts': {**counts_map},
                     'head': head_count,
-                    '浜烘暟': head_count,
+                    '人数': head_count,
                     'backend': 'mixed' if b_backend != c_backend else b_backend,
                     'provenance': {
                         'head_source': 'counts_model'
@@ -1711,12 +1711,12 @@ class VideoProcessingApp:
                 behavior_json = {
                     'image': merged.get('image'),
                     'size': merged.get('size'),
-                    # 浠呬繚瀛樿涓鸿鏁帮紱浜烘暟鍦ㄩ《灞?head/浜烘暟 瀛楁浣撶幇
+                    # 浠呬繚瀛樿涓鸿鏁帮紱人数鍦ㄩ《灞?head/人数 瀛楁浣撶幇
                     'counts': merged.get('counts', {}),
                     'boxes': merged.get('boxes', {}),
                     'objects': merged.get('objects') or merged.get('detections', []),
                     'head': merged.get('head'),
-                    '浜烘暟': merged.get('浜烘暟'),
+                    '人数': merged.get('人数'),
                 }
                 b_path = outp / f"{stem}_behavior.json"
                 b_path.write_text(json.dumps(behavior_json, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -1823,7 +1823,7 @@ class VideoProcessingApp:
                     yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             finally:
                 self.cleanup_resources(cap, video_writer)
-                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '澶勭悊瀹屾垚锛屾鍦ㄤ繚瀛橈紒'}})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '处理完成，正在保存，请稍候'}})
                 for progress in self.convert_avi_to_mp4(self.paths['video_output']):
                     try:
                         final_progress = 95 + int(float(progress) * 0.05)
@@ -1853,7 +1853,7 @@ class VideoProcessingApp:
                             break
                 except Exception as _e:
                     print(f"涓婃姤 videoRecords 鏃跺彂鐢熼敊璇? {_e}")
-                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '瑙嗛澶勭悊瀹屾垚'}})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '视频处理完成'}})
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['video_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1869,7 +1869,7 @@ class VideoProcessingApp:
         })
         if not self.data.get('kind'):
             self.data['kind'] = self._infer_kind(self.data.get('weight')) or 'student'
-        self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': 'loading, please wait'}})
+        self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '处理中，请稍候'}})
         model = YOLO(f'./weights/{self.data["weight"]}') if YOLO is not None else None
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -1931,7 +1931,7 @@ class VideoProcessingApp:
                     yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             finally:
                 self.cleanup_resources(cap, video_writer)
-                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '澶勭悊瀹屾垚锛屾鍦ㄤ繚瀛橈紒'}})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'info', 'text': '处理完成，正在保存，请稍候'}})
                 for progress in self.convert_avi_to_mp4(self.paths['camera_output']):
                     try:
                         final_progress = 95 + int(float(progress) * 0.05)
@@ -1962,7 +1962,7 @@ class VideoProcessingApp:
                             break
                 except Exception as _e:
                     print(f"涓婃姤 cameraRecords 鏃跺彂鐢熼敊璇? {_e}")
-                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '鎽勫儚澶勭悊瀹屾垚'}})
+                self.socketio.emit('message', {'data': {'taskId': self.data.get('taskId'), 'type': 'success', 'text': '摄像检测完成'}})
                 self.cleanup_files([self.paths['download'], self.paths['output'], self.paths['camera_output']])
 
         return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -1970,7 +1970,7 @@ class VideoProcessingApp:
     def stopCamera(self):
         """Stop camera processing."""
         self.recording = False
-        return json.dumps({"status": 200, "message": "棰勬祴鎴愬姛", "code": 0})
+        return json.dumps({"status": 200, "message": "操作成功", "code": 0})
 
     def save_data(self, data, path):
         """Send recognition result data to backend service."""
@@ -2186,5 +2186,6 @@ if __name__ == '__main__':
         env_port = 5000
     video_app = VideoProcessingApp(port=env_port)
     video_app.run()
+
 
 

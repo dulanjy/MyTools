@@ -262,6 +262,47 @@ onMounted(() => {
 	gap: 8px;
 }
 
+:deep(.row-actions .el-button) {
+	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+	background-image: none !important;
+	text-shadow: none !important;
+	filter: none !important;
+}
+
+:deep(.row-actions .el-button > span) {
+	background: transparent !important;
+	background-image: none !important;
+	text-shadow: none !important;
+	-webkit-text-fill-color: currentColor !important;
+}
+
+:deep(.row-actions .el-button--primary.is-plain) {
+	border-color: #2a9d92 !important;
+	background: #2a9d92 !important;
+	color: #ffffff !important;
+}
+
+:deep(.row-actions .el-button--primary.is-plain:hover),
+:deep(.row-actions .el-button--primary.is-plain:focus) {
+	border-color: #24887f !important;
+	background: #24887f !important;
+	color: #ffffff !important;
+}
+
+:deep(.row-actions .el-button--danger.is-plain) {
+	border-color: #ef6b78 !important;
+	background: #ffffff !important;
+	color: #ef6b78 !important;
+}
+
+:deep(.row-actions .el-button--danger.is-plain:hover),
+:deep(.row-actions .el-button--danger.is-plain:focus) {
+	border-color: #e45766 !important;
+	background: #fff5f6 !important;
+	color: #e45766 !important;
+}
+
 @media (max-width: 900px) {
 	.user-manage-page {
 		padding: 12px;
